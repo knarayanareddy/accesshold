@@ -8,15 +8,17 @@ Recorded 2026-10-23 on the local vertical-slice branch. Evidence is limited to d
 | --- | --- |
 | ESLint + Prettier, including `services/` | Passed |
 | TypeScript strict typecheck | Passed |
-| Unit tests | 31/31 passed: 12 policy, 5 manual-contract, 5 ReferenceTravel-monitor, 5 fixture-recovery, and 4 handoff/calendar tests |
-| Canonical schema/contract tests | 6/6 passed; schema copy byte-identical |
+| Unit tests | 40/40 passed: 6 constraint-capture, 12 policy, 8 manual-contract, 5 ReferenceTravel-monitor, 5 fixture-recovery, and 4 handoff/calendar tests |
+| Canonical schema/contract tests | 9/9 passed; schema copy byte-identical |
 | Policy/security tests | 2/2 passed |
 | npm audit, moderate and above | No known vulnerabilities |
 | TypeScript build | Passed |
 | Fixture walking path | Draft import, explicit activation, violation/recovery pages, plan approval, one duplicate-safe TEST PROVIDER receipt, synthetic replacement confirmation, duplicate-safe handoff packet and confirmed-calendar intent, completed case timeline, JSON repository reopen, four versions; no monitoring worker running |
-| **Total tests** | **39/39 passed** |
+| **Total tests** | **51/51 passed** |
 
 The manual fixture service validates schema, semantics, registered predicates, traveler scope, and fixture provenance. Tests cover draft correction, optimistic versions, stale approval rejection, known-violation rejection, append-only history, cross-traveler denial, live-document rejection, and reopening through a new file-repository instance. Corrections cannot silently reclassify live input as a fixture.
+
+FR-AH-003 now has typed domain capture for traveler-authored wording, hard/preference priority, explicit asset scope, and an explicitly supplied registered predicate. Invalid text, asset bindings, feature/operator/value combinations, and units are rejected; new constraints start `unverified` with no fabricated evidence and can only be appended to a traveler-owned draft at its expected version. The importer creates schema-valid ULIDs and persists captures as immutable contract versions. Unit and canonical-schema tests cover hard and preference examples, deterministic predicate evaluation, invalid captures, schema round-trip, fixture persistence, and denied/stale/post-activation requests. This is a local service slice; the product UI and live production persistence are not implemented by it.
 
 The explicitly requested ReferenceTravel fixture pages exercise safe change, hard-constraint violation, recovery, immutable asset/evidence versions, and deterministic re-evaluation. Additional tests cover duplicate and conflicting replays, lower-sequence stale events, equivalent-change attachment, degraded recovery remaining open, a new case after completion, malformed/live-looking evidence, and repository-append failure without phantom history. Duplicate event IDs and the recovery-case index are in-memory; their process-restart durability is not implemented or claimed.
 

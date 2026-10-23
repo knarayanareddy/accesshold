@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
@@ -6,15 +7,51 @@ import {
   type AccessContractDocument,
 } from "../../../packages/contracts/src/index.js";
 import {
+  createAccessConstraint,
+  type ConstraintCaptureDraft,
+} from "../../../packages/domain/src/index.js";
+import {
   evaluateAccessContract,
   type FeatureRegistry,
 } from "../../../packages/policy-engine/src/index.js";
 import type { ContractRepository } from "./contract-repository.js";
 
+export interface CaptureConstraintInput {
+  tripId: string;
+  actorTravelerId: string;
+  expectedVersion: number;
+  constraint: ConstraintCaptureDraft;
+}
+
 export interface ContractView {
   contract: AccessContractDocument;
   monitoring_authorized: boolean;
   provenance: "fixture";
+}
+
+const ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+type ConstraintIdFactory = (at: Date) => string;
+
+function createUlid(at: Date): string {
+  const milliseconds = at.getTime();
+  if (
+    !Number.isSafeInteger(milliseconds) ||
+    milliseconds < 0 ||
+    milliseconds > 0xffffffffffff
+  ) {
+    throw new Error("invalid_constraint_capture_clock");
+  }
+
+  let value =
+    (BigInt(milliseconds) << 80n) |
+    BigInt(`0x${randomBytes(10).toString("hex")}`);
+  let encoded = "";
+  for (let index = 0; index < 26; index += 1) {
+    encoded = `${ULID_ALPHABET[Number(value & 31n)]!}${encoded}`;
+    value >>= 5n;
+  }
+  return encoded;
 }
 
 function monitoringEnabled(document: AccessContractDocument): boolean {
@@ -29,6 +66,7 @@ export class ManualContractService {
     private readonly registry: FeatureRegistry,
     private readonly repository: ContractRepository,
     private readonly clock: () => Date = () => new Date(),
+    private readonly constraintIdFactory: ConstraintIdFactory = createUlid,
   ) {
     const ajv = new Ajv2020({
       allErrors: true,
@@ -103,6 +141,45 @@ export class ManualContractService {
     this.validate(document);
     await this.repository.append(document, null);
     return this.view(document);
+  }
+
+  /**
+   * Records a traveler-authored requirement on the current draft. The caller
+   * must provide an explicit registered predicate and selected asset IDs;
+   * wording is not paraphrased and no evidence or accessibility claim is added.
+   */
+  async captureConstraint(
+    input: CaptureConstraintInput,
+  ): Promise<ContractView> {
+    const current = await this.current(input.tripId, input.actorTravelerId);
+    if (current.version !== input.expectedVersion)
+      throw new Error("optimistic_version_conflict");
+    if (current.status !== "draft")
+      throw new Error("only_draft_contracts_can_capture_constraints");
+
+    const now = this.clock();
+    if (!Number.isFinite(now.getTime()))
+      throw new Error("invalid_constraint_capture_clock");
+    const constraintId = this.constraintIdFactory(now);
+    if (
+      current.constraints.some((item) => item.constraint_id === constraintId)
+    ) {
+      throw new Error("constraint_id_already_exists");
+    }
+    const constraint = createAccessConstraint(input.constraint, {
+      constraint_id: constraintId,
+      assets: current.assets,
+      registry: this.registry,
+    });
+    const captured: AccessContractDocument = {
+      ...structuredClone(current),
+      constraints: [...current.constraints, constraint],
+      version: current.version + 1,
+      updated_at: now.toISOString(),
+    };
+    this.validate(captured);
+    await this.repository.append(captured, current.version);
+    return this.view(captured);
   }
 
   async correctDraft(input: {
