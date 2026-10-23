@@ -5,6 +5,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import type { AccessContractDocument } from "../../packages/contracts/src/index.js";
+import type { ConstraintCaptureDraft } from "../../packages/domain/src/index.js";
 import type { FeatureRegistry } from "../../packages/policy-engine/src/index.js";
 import {
   InMemoryContractRepository,
@@ -42,8 +43,30 @@ function draft(): AccessContractDocument {
 }
 function service(
   repository: ContractRepository = new InMemoryContractRepository(),
+  constraintIdFactory: (at: Date) => string = () =>
+    "01000000000000000000000007",
 ): ManualContractService {
-  return new ManualContractService(schema, registry, repository, clock);
+  return new ManualContractService(
+    schema,
+    registry,
+    repository,
+    clock,
+    constraintIdFactory,
+  );
+}
+
+function constraintDraft(): ConstraintCaptureDraft {
+  return {
+    traveler_text: "I need a doorway at least 80 cm wide.",
+    priority: "hard",
+    applies_to: [example.assets[0]!.asset_id],
+    predicate: {
+      feature: "hotel.room.door_width",
+      operator: "gte",
+      value: 80,
+      unit: "cm",
+    },
+  };
 }
 async function temporaryDirectory(): Promise<string> {
   const directory = await mkdtemp(join(tmpdir(), "accesshold-contract-test-"));
@@ -60,6 +83,138 @@ afterEach(async () => {
 });
 
 describe("manual Access Contract vertical slice", () => {
+  it("captures hard constraints as unverified draft versions without starting monitoring", async () => {
+    const repository = new InMemoryContractRepository();
+    const app = service(repository);
+    await app.importManual(draft(), actor);
+
+    const captured = await app.captureConstraint({
+      tripId,
+      actorTravelerId: actor,
+      expectedVersion: 1,
+      constraint: constraintDraft(),
+    });
+    const constraint = captured.contract.constraints[1]!;
+    expect(captured.contract.version).toBe(2);
+    expect(captured.contract.status).toBe("draft");
+    expect(captured.monitoring_authorized).toBe(false);
+    expect(constraint).toMatchObject({
+      constraint_id: "01000000000000000000000007",
+      traveler_text: "I need a doorway at least 80 cm wide.",
+      priority: "hard",
+      applies_to: [example.assets[0]!.asset_id],
+      predicate: constraintDraft().predicate,
+      status: "unverified",
+      evidence_ids: [],
+    });
+    expect(
+      (await app.versionHistory(tripId, actor)).map((item) => item.version),
+    ).toEqual([1, 2]);
+
+    const activated = await app.activate({
+      tripId,
+      actorTravelerId: actor,
+      expectedVersion: 2,
+      approvedContractVersion: 2,
+    });
+    expect(activated.contract.status).toBe("degraded");
+    expect(activated.monitoring_authorized).toBe(true);
+    expect(activated.contract.constraints[1]!.status).toBe("unverified");
+  });
+
+  it("rejects unauthorized, stale, duplicate, invalid, and post-activation constraint capture", async () => {
+    const repository = new InMemoryContractRepository();
+    const app = service(repository);
+    await app.importManual(draft(), actor);
+
+    await expect(
+      app.captureConstraint({
+        tripId,
+        actorTravelerId: "01000000000000000000000099",
+        expectedVersion: 1,
+        constraint: constraintDraft(),
+      }),
+    ).rejects.toThrow("trip_access_denied");
+    await expect(
+      app.captureConstraint({
+        tripId,
+        actorTravelerId: actor,
+        expectedVersion: 2,
+        constraint: constraintDraft(),
+      }),
+    ).rejects.toThrow("optimistic_version_conflict");
+    await expect(
+      app.captureConstraint({
+        tripId,
+        actorTravelerId: actor,
+        expectedVersion: 1,
+        constraint: {
+          ...constraintDraft(),
+          applies_to: ["01000000000000000000000099"],
+        },
+      }),
+    ).rejects.toThrow("applicable_asset_not_found");
+    expect(
+      (await app.versionHistory(tripId, actor)).map((item) => item.version),
+    ).toEqual([1]);
+
+    const duplicateApp = service(
+      new InMemoryContractRepository(),
+      () => example.constraints[0]!.constraint_id,
+    );
+    await duplicateApp.importManual(draft(), actor);
+    await expect(
+      duplicateApp.captureConstraint({
+        tripId,
+        actorTravelerId: actor,
+        expectedVersion: 1,
+        constraint: constraintDraft(),
+      }),
+    ).rejects.toThrow("constraint_id_already_exists");
+    expect(
+      (await duplicateApp.versionHistory(tripId, actor)).map(
+        (item) => item.version,
+      ),
+    ).toEqual([1]);
+
+    await app.activate({
+      tripId,
+      actorTravelerId: actor,
+      expectedVersion: 1,
+      approvedContractVersion: 1,
+    });
+    await expect(
+      app.captureConstraint({
+        tripId,
+        actorTravelerId: actor,
+        expectedVersion: 2,
+        constraint: constraintDraft(),
+      }),
+    ).rejects.toThrow("only_draft_contracts_can_capture_constraints");
+    expect(
+      (await app.getTrip(tripId, actor)).contract.constraints,
+    ).toHaveLength(1);
+  });
+
+  it("generates a canonical ULID for a captured constraint", async () => {
+    const app = new ManualContractService(
+      schema,
+      registry,
+      new InMemoryContractRepository(),
+      clock,
+    );
+    await app.importManual(draft(), actor);
+    const captured = await app.captureConstraint({
+      tripId,
+      actorTravelerId: actor,
+      expectedVersion: 1,
+      constraint: constraintDraft(),
+    });
+    expect(captured.contract.constraints[1]!.constraint_id).toMatch(
+      /^[0-9A-HJKMNP-TV-Z]{26}$/,
+    );
+  });
+
   it("imports, corrects, explicitly activates, and preserves version history", async () => {
     const app = service();
     const imported = await app.importManual(draft(), actor);
@@ -146,18 +301,28 @@ describe("manual Access Contract vertical slice", () => {
     const path = join(directory, "contracts.json");
     const app = service(new JsonFileFixtureContractRepository(path));
     await app.importManual(draft(), actor);
-    await app.activate({
+    await app.captureConstraint({
       tripId,
       actorTravelerId: actor,
       expectedVersion: 1,
-      approvedContractVersion: 1,
+      constraint: constraintDraft(),
+    });
+    await app.activate({
+      tripId,
+      actorTravelerId: actor,
+      expectedVersion: 2,
+      approvedContractVersion: 2,
     });
 
     const reopened = service(new JsonFileFixtureContractRepository(path));
-    expect((await reopened.getTrip(tripId, actor)).contract.version).toBe(2);
+    const reloaded = await reopened.getTrip(tripId, actor);
+    expect(reloaded.contract.version).toBe(3);
+    expect(reloaded.contract.constraints[1]!.traveler_text).toBe(
+      constraintDraft().traveler_text,
+    );
     expect(
       (await reopened.versionHistory(tripId, actor)).map((item) => item.status),
-    ).toEqual(["draft", "active"]);
+    ).toEqual(["draft", "draft", "degraded"]);
   });
 
   it("rejects live documents at the local persistence boundary", async () => {

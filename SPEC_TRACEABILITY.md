@@ -1,6 +1,6 @@
 # AccessHold — Specification Traceability
 
-**Status:** local contract, ReferenceTravel monitoring, fixture recovery, handoff, and calendar-intent slices validated; most requirements remain incomplete
+**Status:** local constraint capture, contract, ReferenceTravel monitoring, fixture recovery, handoff, and calendar-intent slices validated; most requirements remain incomplete
 **Coverage:** 56 unique requirement and acceptance IDs from [`SPEC.md`](./SPEC.md)
 **Evidence warning:** linked evidence is local source/fixture evidence only; no live integration, device, user-study, or release evidence is implied.
 
@@ -23,7 +23,7 @@ Use paths relative to this project root for implementation, tests, and evidence.
 | --- | --- | --- | --- | --- | --- |
 | `FR-AH-001` | Import a booking from a traveler-authorized confirmation email or manual structured entry. | `implemented` | `services/importer/src/manual-contract-service.ts` | `tests/unit/manual-contract-service.test.ts` | — |
 | `FR-AH-002` | Extract trip/assets into a reviewable draft; no monitoring begins before traveler approval. | `implemented` | `services/importer/src/manual-contract-service.ts` | `tests/unit/manual-contract-service.test.ts` | — |
-| `FR-AH-003` | Capture hard constraints and preferences with traveler wording, deterministic predicates, and applicable assets. | `in_progress` | `services/importer/src/manual-contract-service.ts` | `tests/unit/manual-contract-service.test.ts` | — |
+| `FR-AH-003` | Capture hard constraints and preferences with traveler wording, deterministic predicates, and applicable assets. | `implemented` | `packages/domain/src/index.ts`<br>`services/importer/src/manual-contract-service.ts`<br>`services/importer/src/contract-repository.ts` | `tests/unit/constraint-capture.test.ts`<br>`tests/unit/manual-contract-service.test.ts`<br>`tests/contract/constraint-capture.test.ts`<br>`docs/validation.md` | — |
 | `FR-AH-004` | Validate and persist an Access Contract using the canonical schema. | `implemented` | `packages/contracts`<br>`services/importer/src` | `tests/contract`<br>`tests/unit/manual-contract-service.test.ts` | — |
 | `FR-AH-005` | Attach source-specific, timestamped evidence to exact assets; expired evidence becomes stale/unverified. | `in_progress` | `services/monitor/src/reference-travel-monitor.ts`<br>`packages/policy-engine/src/index.ts` | `tests/unit/reference-travel-monitor.test.ts`<br>`tests/unit/policy-engine.test.ts` | — |
 | `FR-AH-006` | Draft provider verification questions and send them only after approval. | `not_started` | — | — | — |
