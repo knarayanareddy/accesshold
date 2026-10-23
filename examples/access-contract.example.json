@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "contract_id": "01000000000000000000000001",
+  "traveler_id": "01000000000000000000000002",
+  "trip": {
+    "trip_id": "01000000000000000000000003",
+    "title": "Fixture Amsterdam hotel stay",
+    "starts_at": "2026-11-01T14:00:00.000Z",
+    "ends_at": "2026-11-04T10:00:00.000Z",
+    "time_zone": "Europe/Amsterdam",
+    "source": "fixture"
+  },
+  "assets": [
+    {
+      "asset_id": "01000000000000000000000004",
+      "kind": "hotel_room",
+      "provider": "Fixture Hotel Provider",
+      "provider_reference": "TEST-CONF-001",
+      "starts_at": "2026-11-01T14:00:00.000Z",
+      "ends_at": "2026-11-04T10:00:00.000Z",
+      "attributes": [
+        { "key": "hotel.room.roll_in_shower", "value": true },
+        { "key": "hotel.room.door_width", "value": 86, "unit": "cm" }
+      ]
+    }
+  ],
+  "constraints": [
+    {
+      "constraint_id": "01000000000000000000000005",
+      "traveler_text": "I need a roll-in shower without a raised lip.",
+      "priority": "hard",
+      "applies_to": ["01000000000000000000000004"],
+      "predicate": {
+        "feature": "hotel.room.roll_in_shower",
+        "operator": "eq",
+        "value": true
+      },
+      "status": "provider_confirmed",
+      "evidence_ids": ["01000000000000000000000006"]
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "01000000000000000000000006",
+      "asset_id": "01000000000000000000000004",
+      "source_type": "fixture",
+      "verification_level": "provider_confirmed",
+      "features": [
+        { "key": "hotel.room.roll_in_shower", "value": true },
+        { "key": "hotel.room.door_width", "value": 86, "unit": "cm" }
+      ],
+      "source_uri": "https://provider.example.test/confirmations/TEST-CONF-001",
+      "content_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "observed_at": "2026-10-20T09:30:00.000Z",
+      "expires_at": "2026-11-01T12:00:00.000Z",
+      "provenance": "fixture"
+    }
+  ],
+  "approval_policy": {
+    "allowed_actions": ["send_provider_request", "calendar_update", "sandbox_rebook"],
+    "max_additional_cost": { "amount_minor": 0, "currency": "EUR" },
+    "voice_approval_allowed": true,
+    "human_handoff_contact": "advocate@example.test"
+  },
+  "status": "active",
+  "provenance": "fixture",
+  "version": 1,
+  "created_at": "2026-10-20T09:00:00.000Z",
+  "updated_at": "2026-10-20T09:30:00.000Z"
+}

@@ -1,0 +1,2 @@
+/* Project theme and page-specific wireframe composition. */
+    :root { --canvas:#f3f5f7; --surface:#ffffff; --surface-2:#e8eef1; --text:#142b3a; --muted:#4b5d68; --line:#b9c5cc; --primary:#145a73; --on-primary:#ffffff; --accent:#91421f; --on-accent:#ffffff; --success:#1e654a; --warning:#704400; --danger:#962e3a; --info:#285a91; --focus:#7c3f00; --font-body:"Source Sans 3","Segoe UI",system-ui,sans-serif; --font-display:"Source Sans 3","Segoe UI",system-ui,sans-serif; --font-mono:"IBM Plex Mono","SFMono-Regular",monospace; }

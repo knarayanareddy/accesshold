@@ -1,0 +1,18 @@
+{
+  "version": "feature_registry_v1",
+  "review_status": "draft_requires_live_operations_review",
+  "features": [
+    { "key": "flight.aircraft.accessible_lavatory", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "flight.seat.movable_aisle_armrest", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "flight.seat.width", "value_type": "number", "allowed_units": ["cm", "in"], "canonical_unit": "cm", "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "flight.mobility_device.accepted", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.roll_in_shower", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.shower_lip_height", "value_type": "number", "allowed_units": ["cm", "in"], "canonical_unit": "cm", "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.door_width", "value_type": "number", "allowed_units": ["cm", "in"], "canonical_unit": "cm", "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.bed_height", "value_type": "number", "allowed_units": ["cm", "in"], "canonical_unit": "cm", "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.elevator_served", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "hotel.room.step_free_route", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "transfer.vehicle.wheelchair_compatible", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 },
+    { "key": "transfer.vehicle.ramp_or_lift", "value_type": "boolean", "allowed_units": [], "canonical_unit": null, "allowed_sources": ["provider_written", "traveler_supplied", "official_api"], "stale_after_hours": 2160 }
+  ]
+}

@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Static low-fidelity AccessHold web and Alexa-card wireframes using fictional evidence.">
+  <title>AccessHold — Low-fidelity wireframes</title>
+  <link rel="stylesheet" href="../specs/ui/wireframes.css">
+  <link rel="stylesheet" href="./theme.css">
+  <script src="../specs/ui/wireframes.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to wireframes</a>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v4m0 3h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10h.01"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6V3Z"/><path d="M14 3v5h5M9 12h6m-6 4h6"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-5-5 5 5-5 5"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="m9 15 6-6m-7 1-2 2a4 4 0 0 0 6 6l2-2m2-6 2-2a4 4 0 0 0-6-6l-2 2"/></symbol>
+  </svg>
+  <header class="review-header">
+    <div class="review-header__inner">
+      <div class="review-brand"><strong>AccessHold</strong><span>UI specification / 01</span></div>
+      <nav class="review-links" aria-label="Document links"><a href="../../../specs/ui/index.html">All projects</a><a href="./DESIGN.md">Design</a><a href="./tokens.json">Tokens</a><a href="./WIREFRAMES.md">Screen notes</a></nav>
+    </div>
+  </header>
+  <main class="review-main" id="main">
+    <div class="review-intro">
+      <span class="eyebrow">Calm evidence desk · responsive web + Alexa card</span>
+      <h1>Clarity before commitment.</h1>
+      <p>Five low-fidelity screens for contracts, disruption recovery, and accountable handoff. Evidence, freshness, and unknowns stay in the main reading order.</p>
+      <div class="prototype-notice"><strong>Static review artifact.</strong> All trips, providers, prices, and evidence are fictional. Controls do not book travel, export data, or call a service.</div>
+    </div>
+    <nav aria-label="AccessHold screens"><ul class="screen-nav">
+      <li><a href="#trips">01 · Trips</a></li><li><a href="#contract">02 · Contract</a></li><li><a href="#recovery">03 · Recovery</a></li><li><a href="#handoff">04 · Handoff</a></li><li><a href="#card">05 · Alexa card</a></li>
+    </ul></nav>
+
+    <section class="wireframe" id="trips" aria-labelledby="trips-title">
+      <div class="screen-heading"><div><span class="screen-number">SCREEN 01 / RESPONSIVE WEB</span><h2 id="trips-title">Trips and change queue</h2></div><p>Start with what changed and which requirement is affected—not with a generic assistant prompt.</p></div>
+      <div class="app-frame">
+        <header class="app-header"><div class="app-header__brand">AccessHold <span class="status status--info">TEST PROVIDER</span></div><div class="app-header__meta"><span>Trips</span><span>Recovery cases</span><span>Connections</span><span>Privacy</span><span class="mono">Synced 14:32 CET</span></div></header>
+        <div class="app-body">
+          <div class="app-title"><div><h3>Your trips</h3><p>Fictional demonstration workspace · 18 November 2026</p></div><button class="button button--secondary" type="button" data-static>+ Add trip</button></div>
+          <div class="split">
+            <div class="stack">
+              <article class="panel panel--selected"><div class="cluster cluster--between"><strong>Amsterdam → Copenhagen</strong><span class="status status--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg>1 change</span></div><p class="muted small">21–24 Nov · Trip AH-DEMO-014</p><div class="cluster"><span class="status status--success"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Contract active</span><span class="small muted">2 travelers</span></div></article>
+              <article class="panel"><div class="cluster cluster--between"><strong>Utrecht → Antwerp</strong><span class="status status--success"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>No changes</span></div><p class="muted small">2 Dec · Trip AH-DEMO-018</p><span class="small muted">Last checked 14:30 CET</span></article>
+              <div class="panel panel--muted"><strong>Evidence freshness</strong><p class="small muted">Current means current at the stated source time. It is not a guarantee of future availability.</p></div>
+            </div>
+            <div class="stack">
+              <div class="banner banner--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg><div><strong>Rail segment changed</strong><p>Train 242 now departs at 09:18 instead of 08:54. The step-free transfer requirement needs review.</p></div></div>
+              <article class="panel">
+                <div class="cluster cluster--between"><div><span class="eyebrow">Active disruption</span><h4>Amsterdam → Copenhagen</h4></div><span class="status status--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg>Review by 16:00</span></div>
+                <dl class="definition-grid"><dt>Changed asset</dt><dd>Train 242 · Amsterdam–Hamburg</dd><dt>Previous</dt><dd class="numeric">08:54–13:42 · 18 Nov fixture</dd><dt>Current</dt><dd class="numeric">09:18–14:26 · provider observed 14:31</dd><dt>Affected requirement</dt><dd>Step-free boarding and transfer</dd></dl>
+                <div class="divider"></div>
+                <div class="cluster cluster--between"><span class="status status--danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-link"/></svg>Requirement changed</span><span class="small muted">Other itinerary segments unchanged</span></div>
+                <div class="button-row"><a class="button" href="#recovery">Review recovery options <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-arrow"/></svg></a><button class="button button--secondary" type="button" data-static>Continue monitoring</button></div>
+              </article>
+              <article class="card"><div class="cluster"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-file"/></svg><strong>Why this needs review</strong></div><p class="small muted">The new itinerary uses Hamburg platform 7. The provider confirms a schedule change, but the current evidence does not verify step-free access for the 12-minute transfer.</p></article>
+            </div>
+          </div>
+        </div>
+      </div>
+      <details class="annotations" open><summary>Interaction and state annotations</summary><ul><li>Change details remain visible after any entrance transition.</li><li>Routine changes use a polite status announcement; countdowns are not repeatedly announced.</li><li>Offline state preserves the cached itinerary and shows its last-current time.</li></ul></details>
+    </section>
+
+    <section class="wireframe" id="contract" aria-labelledby="contract-title">
+      <div class="screen-heading"><div><span class="screen-number">SCREEN 02 / RESPONSIVE WEB</span><h2 id="contract-title">Access Contract editor</h2></div><p>Hard constraints, preferences, and verification coverage use different language and hierarchy.</p></div>
+      <div class="app-frame">
+        <header class="app-header"><div class="app-header__brand">AccessHold</div><div class="app-header__meta"><span>Amsterdam → Copenhagen</span><span class="status status--neutral">Draft v4 · not used for booking</span></div></header>
+        <div class="app-body">
+          <div class="app-title"><div><h3>Access Contract</h3><p>Traveler-reviewed requirements · Last saved 18 Nov 2026, 13:58 CET</p></div><button class="button" type="button" data-static>Save contract draft</button></div>
+          <div class="split split--wide-left">
+            <div class="stack">
+              <div class="cluster cluster--between"><h4>Requirements</h4><button class="button button--secondary" type="button" data-static>+ Add requirement</button></div>
+              <article class="panel panel--selected"><div class="cluster cluster--between"><strong>Step-free boarding and transfer</strong><span class="status status--danger">Hard constraint</span></div><p class="small muted">Applies to every rail station and vehicle in this trip.</p><div class="cluster"><span class="status status--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg>Not yet verified</span><button class="button button--ghost" type="button" data-static>Edit</button></div></article>
+              <article class="panel"><div class="cluster cluster--between"><strong>Seat with movable armrest</strong><span class="status status--danger">Hard constraint</span></div><p class="small muted">Applies to rail segments longer than 90 minutes.</p><div class="cluster"><span class="status status--success"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>Provider confirmed</span><button class="button button--ghost" type="button" data-static>Edit</button></div></article>
+              <article class="panel"><div class="cluster cluster--between"><strong>Quiet coach</strong><span class="status status--info">Preference</span></div><p class="small muted">Choose when available; never trade off a hard constraint.</p><div class="cluster"><span class="status status--info"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-file"/></svg>Documented</span><button class="button button--ghost" type="button" data-static>Edit</button></div></article>
+            </div>
+            <aside class="panel" aria-label="Selected requirement evidence">
+              <span class="eyebrow">Selected requirement</span><h4>Step-free boarding and transfer</h4>
+              <dl class="definition-grid"><dt>Applicability</dt><dd>All stations + vehicles</dd><dt>Review owner</dt><dd>Traveler</dd><dt>Current coverage</dt><dd><span class="status status--warning">2 of 4 segments verified</span></dd></dl>
+              <div class="divider"></div>
+              <h5>Evidence and exact gap</h5>
+              <div class="banner banner--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg><div><strong>Transfer access not yet verified</strong><p>Station access guide observed 17 Nov 2026, 09:00 CET. It describes the station generally, not the route between platforms 3 and 7.</p></div></div>
+              <ul class="rule-list small"><li><strong>Source</strong><br><span class="muted">Fictional station access guide · document excerpt</span></li><li><strong>Verifies</strong><br><span class="muted">Step-free entrance from street to station hall</span></li><li><strong>Does not verify</strong><br><span class="muted">Lift availability or route for this specific transfer</span></li></ul>
+              <div class="button-row"><button class="button button--secondary" type="button" data-static>Open source excerpt</button><a class="button button--ghost" href="#handoff">Request handoff</a></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+      <details class="annotations"><summary>Interaction and state annotations</summary><ul><li>Unknown evidence does not mean the requirement is violated.</li><li>Saving creates a versioned contract only; it never executes a provider action.</li><li>At narrow widths, evidence follows the selected requirement in DOM order.</li></ul></details>
+    </section>
+
+    <section class="wireframe" id="recovery" aria-labelledby="recovery-title">
+      <div class="screen-heading"><div><span class="screen-number">SCREEN 03 / RESPONSIVE WEB</span><h2 id="recovery-title">Disruption recovery</h2></div><p>Compare exact options and unknowns before selection; commitment remains a separate step.</p></div>
+      <div class="app-frame">
+        <header class="app-header"><div class="app-header__brand">AccessHold</div><div class="app-header__meta"><span class="status status--info">Recovery case RC-DEMO-07</span><span>Plan expires 16:00 CET</span></div></header>
+        <div class="app-body">
+          <div class="app-title"><div><h3>Review recovery options</h3><p>Amsterdam → Copenhagen · Prices and terms are fictional fixtures</p></div><span class="status status--warning"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-clock"/></svg>Evidence current at 14:31 CET</span></div>
+          <div class="banner banner--danger"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-alert"/></svg><div><strong>Original itinerary no longer satisfies the Access Contract</strong><p>The 12-minute Hamburg transfer lacks verified step-free routing. No automatic replacement has been booked.</p></div></div>
+          <div class="grid-2 app-section">
+            <article class="panel"><div class="cluster cluster--between"><span class="eyebrow">Option A</span><span class="status status--warning">1 unknown</span></div><h4>Later direct train</h4><p class="numeric">10:24–17:06 · Direct · 1 seat selection</p><ul class="rule-list small"><li><span class="status status--success">✓ Step-free boarding confirmed</span></li><li><span class="status status--success">✓ Movable armrest confirmed</span></li><li><span class="status status--warning">? Boarding assistance window unverified</span></li></ul><dl class="definition-grid small"><dt>Additional cost</dt><dd>€18.00 total</dd><dt>Terms</dt><dd>Exchangeable until departure</dd><dt>Evidence expiry</dt><dd class="numeric">15:45 CET</dd></dl><div class="button-row"><button class="button" type="button" data-static>Select for review</button></div></article>
+            <article class="panel"><div class="cluster cluster--between"><span class="eyebrow">Option B</span><span class="status status--danger">1 hard conflict</span></div><h4>Earlier train + transfer</h4><p class="numeric">09:58–15:44 · 1 transfer · 8 minutes</p><ul class="rule-list small"><li><span class="status status--danger">× Step-free transfer not available</span></li><li><span class="status status--success">✓ Movable armrest confirmed</span></li><li><span class="status status--neutral">No additional unknowns listed</span></li></ul><dl class="definition-grid small"><dt>Additional cost</dt><dd>€6.00 total</dd><dt>Terms</dt><dd>Non-refundable</dd><dt>Evidence expiry</dt><dd class="numeric">15:30 CET</dd></dl><div class="button-row"><button class="button button--secondary" type="button" disabled aria-disabled="true">Not contract-compatible</button></div></article>
+          </div>
+          <div class="panel app-section"><h4>Unknowns stay attached to the selected option</h4><p class="small muted">Option A requires confirmation of the boarding-assistance booking window before provider approval. You can create a human handoff packet without treating that unknown as resolved.</p><div class="button-row"><button class="button button--accent" type="button" data-static>Review selected recovery</button><a class="button button--secondary" href="#handoff">Request human handoff</a><a class="button button--ghost" href="#contract">Return to contract</a></div></div>
+        </div>
+      </div>
+      <details class="annotations"><summary>Interaction and state annotations</summary><ul><li>No option is preselected and cost alone cannot rank an incompatible option first.</li><li>Recent authentication and exact terms appear on the subsequent approval sheet, not here.</li><li>A provider timeout becomes an ambiguous result for reconciliation, not a success screen.</li></ul></details>
+    </section>
+
+    <section class="wireframe" id="handoff" aria-labelledby="handoff-title">
+      <div class="screen-heading"><div><span class="screen-number">SCREEN 04 / RESPONSIVE WEB</span><h2 id="handoff-title">Human handoff packet</h2></div><p>Scope the export, show exclusions, and preserve the distinction between handoff and booking.</p></div>
+      <div class="app-frame"><div class="app-body">
+        <div class="app-title"><div><h3>Create handoff packet</h3><p>Recovery case RC-DEMO-07 · Plan AH-PLAN-DEMO-31</p></div><span class="status status--neutral">Draft · nothing sent</span></div>
+        <div class="split">
+          <div class="stack">
+            <section class="panel"><h4>Recipient and channel</h4><div class="field"><span>Handoff destination</span><div class="input-like">Fictional traveler-support desk</div></div><div class="field" style="margin-top:12px"><span>Delivery</span><div class="input-like">Expiring access link · 24 hours</div></div></section>
+            <section class="panel"><h4>Included artifacts</h4><ul class="stack"><li class="check-row"><span class="check-box check-box--checked"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></span><span>Selected recovery option and exact terms</span></li><li class="check-row"><span class="check-box check-box--checked"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></span><span>Relevant Access Contract excerpts</span></li><li class="check-row"><span class="check-box check-box--checked"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg></span><span>Evidence summary with source times and unknowns</span></li><li class="check-row"><span class="check-box"></span><span>Full original documents <span class="muted">(not included)</span></span></li></ul></section>
+            <div class="banner"><svg class="icon" aria-hidden="true" focusable="false"><use href="#i-lock"/></svg><div><strong>Sensitive material excluded</strong><p>No provider credentials, payment data, unrelated trips, or raw document store access.</p></div></div>
+          </div>
+          <section class="panel"><span class="eyebrow">Packet preview</span><h4>Current state and requested help</h4><dl class="definition-grid small"><dt>Status</dt><dd>Awaiting human verification</dd><dt>Requested action</dt><dd>Confirm boarding-assistance window</dd><dt>Selected option</dt><dd>Later direct train · €18.00 additional</dd><dt>Unknown</dt><dd>Assistance window for 10:24 departure</dd><dt>Evidence current</dt><dd class="numeric">18 Nov 2026, 14:31 CET</dd><dt>Provider booking</dt><dd><strong>Not created</strong></dd></dl><div class="divider"></div><p class="small muted">The recipient receives a scoped snapshot. Creating this packet does not approve or execute the recovery plan.</p><div class="button-row"><button class="button" type="button" data-static>Create expiring packet</button><button class="button button--secondary" type="button" data-static>Cancel</button></div></section>
+        </div>
+      </div></div>
+      <details class="annotations"><summary>Interaction and state annotations</summary><ul><li>Link expiry and revocation are explicit post-create states.</li><li>Export includes the plan ID for later reconciliation.</li><li>On mobile, preview precedes the create action in reading order.</li></ul></details>
+    </section>
+
+    <section class="wireframe" id="card" aria-labelledby="card-title">
+      <div class="screen-heading"><div><span class="screen-number">SCREEN 05 / ALEXA RICH CARD</span><h2 id="card-title">Recovery summary card</h2></div><p>A concise companion to voice, with source time and a route to the full comparison.</p></div>
+      <div class="app-frame" style="max-width:720px;margin-inline:auto"><div class="app-body">
+        <div class="cluster cluster--between"><div class="app-header__brand">AccessHold</div><span class="status status--info">Alexa card preview</span></div>
+        <div class="app-section"><span class="eyebrow">Amsterdam → Copenhagen</span><h3 style="margin:6px 0">One recovery option needs review</h3><p class="muted">Your original train changed. The direct replacement meets two confirmed requirements; one assistance detail is still unknown.</p></div>
+        <div class="panel panel--accent app-section"><div class="cluster cluster--between"><strong>Later direct train</strong><span class="numeric">+€18.00</span></div><p class="numeric small">10:24–17:06 · Evidence current 14:31 CET</p><div class="cluster"><span class="status status--success">2 confirmed</span><span class="status status--warning">1 unknown</span></div></div>
+        <div class="button-row"><a class="button" href="#recovery">Compare options</a><a class="button button--secondary" href="#handoff">Request handoff</a></div>
+        <p class="small muted">No booking has been made. Say “open recovery details” or use the web view for complete terms and evidence.</p>
+      </div></div>
+      <details class="annotations"><summary>Interaction and state annotations</summary><ul><li>The card does not expose a direct one-tap purchase.</li><li>Voice and card share the same evidence view model.</li><li>Long documents and complete terms open in the responsive web view.</li></ul></details>
+    </section>
+    <p class="demo-status" id="demo-status" role="status" aria-live="polite"></p>
+  </main>
+  <footer class="review-footer">AccessHold low-fidelity UI specification · Fictional fixtures only · No provider, Alexa, or booking integration is running.</footer>
+</body>
+</html>

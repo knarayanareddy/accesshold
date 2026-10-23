@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.local/accesshold/access-contract.schema.json",
+  "title": "AccessHold Access Contract",
+  "description": "Canonical versioned contract for accessibility constraints, booked assets, and evidence. It is not a guarantee of physical accessibility.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_id",
+    "traveler_id",
+    "trip",
+    "assets",
+    "constraints",
+    "evidence",
+    "approval_policy",
+    "status",
+    "provenance",
+    "version",
+    "created_at",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "contract_id": { "$ref": "#/$defs/ulid" },
+    "traveler_id": { "$ref": "#/$defs/ulid" },
+    "trip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trip_id", "title", "starts_at", "ends_at", "time_zone", "source"],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 160 },
+        "starts_at": { "$ref": "#/$defs/timestamp" },
+        "ends_at": { "$ref": "#/$defs/timestamp" },
+        "time_zone": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "source": { "enum": ["confirmation_email", "provider_api", "manual", "fixture"] }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["asset_id", "kind", "provider", "provider_reference", "starts_at", "ends_at", "attributes"],
+        "properties": {
+          "asset_id": { "$ref": "#/$defs/ulid" },
+          "kind": { "enum": ["flight", "seat", "hotel_room", "ground_transfer"] },
+          "provider": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "provider_reference": { "type": "string", "minLength": 1, "maxLength": 256 },
+          "starts_at": { "$ref": "#/$defs/timestamp" },
+          "ends_at": { "$ref": "#/$defs/timestamp" },
+          "parent_asset_id": { "$ref": "#/$defs/ulid" },
+          "attributes": { "type": "array", "items": { "$ref": "#/$defs/feature" } }
+        }
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["constraint_id", "traveler_text", "priority", "applies_to", "predicate", "status", "evidence_ids"],
+        "properties": {
+          "constraint_id": { "$ref": "#/$defs/ulid" },
+          "traveler_text": { "type": "string", "minLength": 1, "maxLength": 500 },
+          "priority": { "enum": ["hard", "preference"] },
+          "applies_to": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": { "$ref": "#/$defs/ulid" }
+          },
+          "predicate": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["feature", "operator", "value"],
+            "properties": {
+              "feature": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
+              "operator": { "enum": ["eq", "neq", "gte", "lte", "in", "exists"] },
+              "value": {
+                "oneOf": [
+                  { "type": "string", "maxLength": 256 },
+                  { "type": "number" },
+                  { "type": "boolean" },
+                  { "type": "array", "minItems": 1, "items": { "type": ["string", "number", "boolean"] } }
+                ]
+              },
+              "unit": { "type": "string", "maxLength": 32 }
+            }
+          },
+          "status": { "enum": ["provider_confirmed", "documented", "unverified", "violated", "not_applicable"] },
+          "evidence_ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/ulid" } }
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["evidence_id", "asset_id", "source_type", "verification_level", "features", "observed_at", "provenance"],
+        "properties": {
+          "evidence_id": { "$ref": "#/$defs/ulid" },
+          "asset_id": { "$ref": "#/$defs/ulid" },
+          "source_type": { "enum": ["official_api", "provider_written", "provider_document", "traveler_supplied", "review", "fixture"] },
+          "verification_level": { "enum": ["provider_confirmed", "documented", "unverified"] },
+          "features": { "type": "array", "items": { "$ref": "#/$defs/feature" } },
+          "source_uri": { "type": "string", "format": "uri", "maxLength": 2048 },
+          "content_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "observed_at": { "$ref": "#/$defs/timestamp" },
+          "expires_at": { "$ref": "#/$defs/timestamp" },
+          "provenance": { "enum": ["live", "fixture"] }
+        }
+      }
+    },
+    "approval_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_actions", "max_additional_cost", "voice_approval_allowed", "human_handoff_contact"],
+      "properties": {
+        "allowed_actions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "enum": ["send_provider_request", "calendar_update", "sandbox_rebook", "live_rebook"] }
+        },
+        "max_additional_cost": { "$ref": "#/$defs/money" },
+        "voice_approval_allowed": { "type": "boolean" },
+        "human_handoff_contact": { "type": "string", "minLength": 3, "maxLength": 320 }
+      }
+    },
+    "status": { "enum": ["draft", "active", "degraded", "violated", "recovering", "closed"] },
+    "provenance": { "enum": ["live", "fixture"] },
+    "version": { "type": "integer", "minimum": 1 },
+    "created_at": { "$ref": "#/$defs/timestamp" },
+    "updated_at": { "$ref": "#/$defs/timestamp" }
+  },
+  "$defs": {
+    "ulid": { "type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount_minor", "currency"],
+      "properties": {
+        "amount_minor": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
+        "value": {
+          "oneOf": [
+            { "type": "string", "maxLength": 500 },
+            { "type": "number" },
+            { "type": "boolean" },
+            { "type": "null" }
+          ]
+        },
+        "unit": { "type": "string", "maxLength": 32 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}
