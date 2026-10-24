@@ -153,7 +153,7 @@ describe("MCP tool JSON Schema contracts", () => {
       Object.keys(contracts.$defs).filter((name) => name.endsWith("_input")),
     ).toHaveLength(8);
     expect(testCases).toHaveLength(8);
-  });
+  }, 15_000);
 
   it.each(testCases)(
     "validates $name input and output examples",

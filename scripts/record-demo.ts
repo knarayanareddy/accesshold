@@ -70,7 +70,7 @@ try {
   await page.waitForFunction(
     () => document.documentElement.dataset.contrast === "high",
   );
-  await page.waitForTimeout(6_500);
+  await page.waitForTimeout(22_000);
   await page
     .getByRole("button", { name: "Close accessibility preferences" })
     .click();
@@ -80,31 +80,31 @@ try {
   await page
     .getByRole("heading", { name: "A room detail needs review" })
     .waitFor({ state: "visible" });
-  await page.waitForTimeout(8_000);
+  await page.waitForTimeout(24_000);
   await page.getByRole("button", { name: /Review recovery options/ }).click();
   await page
     .getByRole("heading", { name: "Review recovery options" })
     .waitFor({ state: "visible" });
   timeline.recoveryPlan = elapsedSeconds();
-  await page.waitForTimeout(6_000);
+  await page.waitForTimeout(20_000);
   await page.getByRole("radio").first().check();
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(8_000);
   await page.getByRole("button", { name: /Review selected recovery/ }).click();
   await page.getByText("Pending your approval").waitFor({ state: "visible" });
-  await page.waitForTimeout(4_000);
+  await page.waitForTimeout(10_000);
   await page.getByLabel(/Type APPROVE RECOVERY/).fill("APPROVE RECOVERY");
-  await page.waitForTimeout(3_000);
+  await page.waitForTimeout(14_000);
   await page.getByRole("button", { name: "Approve exact plan" }).click();
   await page.getByText("Approval recorded").waitFor({ state: "visible" });
   timeline.approvalRecorded = elapsedSeconds();
-  await page.waitForTimeout(6_000);
+  await page.waitForTimeout(15_000);
 
   await page.getByRole("button", { name: "Execute fixture action" }).click();
   await page
     .getByText("Waiting for provider confirmation")
     .waitFor({ state: "visible" });
   timeline.fixtureAction = elapsedSeconds();
-  await page.waitForTimeout(7_500);
+  await page.waitForTimeout(15_000);
   recordedDuration = elapsedSeconds();
 
   await page.close();
