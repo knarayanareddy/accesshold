@@ -1,6 +1,6 @@
 # AccessHold — Specification Traceability
 
-**Status:** local contract/provider-question approval, fixture MCP/API, accessibility-enhanced dashboard, deterministic PostgreSQL/DynamoDB demo seeding, SES MIME ingress boundary, durable contract adapters, and infrastructure synthesis checks are implemented or partially implemented; live integrations, production wiring, manual assistive-technology evidence, and release gates remain incomplete
+**Status:** local contract/provider-question approval, fixture MCP/API, accessibility-enhanced dashboard, deterministic PostgreSQL/DynamoDB demo seeding, SES MIME ingress boundary, durable contract adapters, local Compose/Pages demo tooling, and infrastructure synthesis checks are implemented or partially implemented; live integrations, production wiring, Docker/browser runtime evidence, manual assistive-technology evidence, and release gates remain incomplete
 **Coverage:** 56 unique requirement and acceptance IDs from [`SPEC.md`](./SPEC.md)
 **Evidence warning:** linked evidence is local source/fixture evidence only; no live integration, device, user-study, or release evidence is implied.
 
@@ -77,3 +77,9 @@ Use paths relative to this project root for implementation, tests, and evidence.
 | `AC-AH-018` | Given prompt injection in a provider email, when extracted, then no tool/action instruction is executed. | `not_started` | — | — | — |
 | `AC-AH-019` | Given revoked monitoring consent, when the next poll occurs, then no provider request is made. | `not_started` | — | — | — |
 | `AC-AH-020` | Given a real Alexa+ session, when status/options/handoff are invoked, then the actual backend and rich-card authorization path work. | `not_started` | — | — | — |
+
+## Demo and local orchestration tooling
+
+The requested local environment is defined by `docker-compose.yml` and `Dockerfile`; `scripts/test-compose-launch.sh` starts one isolated stack, checks health/API/dashboard/migration, and cleans its volumes. `.github/workflows/compose-smoke.yml` runs that launch test on pull requests and `main` pushes. Runtime launch evidence is environment-dependent; see `docs/validation.md`.
+
+The standalone Pages rendition is built by `.github/workflows/pages.yml` using `VITE_SANDBOX=true`. `apps/web/src/sandbox-api.ts` calls the existing `services/api/src/fixture-runtime.ts` in memory; this remains synthetic fixture behavior and does not change `INT-AH-002` or any Alexa+/live release gate. `scripts/record-demo.ts` records the plan-bound fixture walkthrough to `docs/media/accesshold-demo.webm`; a real browser run is required before a video artifact exists.

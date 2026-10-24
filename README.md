@@ -21,6 +21,24 @@ make test-security
 make build build-web
 ```
 
+### One-command local stack
+
+With Docker Compose v2 installed, launch the complete local stack with:
+
+```bash
+docker compose up --build
+```
+
+Open the dashboard at `http://localhost:5173/accesshold/`; the Fastify REST and MCP endpoints share port `3000`, PostgreSQL 16 is on `5432`, and DynamoDB Local is on `8000`. The API applies the PostgreSQL contract migration before it starts. The running API and dashboard remain fixture-backed: PostgreSQL is initialized for local persistence work, while DynamoDB Local is included as an emulator and is not wired into this fixture API. Stop the stack with `docker compose down`. `corepack pnpm test:compose` performs one isolated Compose `up`, checks service health, API/dashboard responses and the migration, then removes only its test project's volumes.
+
+### GitHub Pages sandbox
+
+The `pages.yml` workflow builds and deploys a static demo from `main`. Configure the repository's Pages source as **GitHub Actions** once. The build sets `VITE_SANDBOX=true`; the browser then calls the client-side adapter over the same in-memory fixture runtime and synthetic files as the local API, so the Pages rendition does not call a live backend. Browser state resets on reload, and all actions remain explicitly fixture-only. `VITE_SANDBOX=true corepack pnpm build:web` builds the static site locally; `cd apps/web && pnpm build` is also available.
+
+### Demo recording
+
+With the Compose stack running and Chromium installed for Playwright, run `corepack pnpm record:demo`. It records the high-contrast, disruption-review, recovery-plan and explicitly approved fixture-action flow to `docs/media/accesshold-demo.webm`. Install the browser once with `corepack pnpm exec playwright install chromium`. The generated video is ignored by Git; the recorder retains the requested path, while `docs/media/.gitkeep` keeps the media directory in the repository. The clip ends waiting for provider confirmation and is not a live booking or a completion claim.
+
 `make test-security` also audits the locked npm dependency graph. `make test-e2e` runs the Vitest/jsdom dashboard-to-Fastify smoke flow; it does not launch Chromium or prove live provider behavior. Fake-client repository tests run with `make test-unit`. `make test-integration` runs an optional real PostgreSQL test enabled with `ACCESSHOLD_TEST_DATABASE_URL`; it is skipped without a disposable test database. Infrastructure checks are local-only: `make test-infra` runs the CDK TypeScript check, CDK assertions, and `cdk synth`; it does not contact AWS. `make synth-infra` is available separately. `make deploy` remains blocked because real provider, identity, worker, release, and Alexa+ validation are not implemented or authorized.
 
 The synthetic traveler seed supports either durable backend and can seed both when both are configured. Use `pnpm seed:traveler-data -- --driver postgres`, `--driver dynamodb`, or `--driver both`; `--dry-run` prints the fixture bundle without connecting, and `--scenarios-output <file>` also saves the generated delay/gate-change scenarios and pre-calculated options. The command never sends provider requests or performs bookings. See [`docs/persistence.md`](./docs/persistence.md) and [`docs/accessibility.md`](./docs/accessibility.md).

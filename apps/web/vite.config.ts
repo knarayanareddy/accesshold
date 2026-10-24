@@ -1,7 +1,10 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+const apiProxyTarget = process.env.API_PROXY_TARGET ?? "http://127.0.0.1:4100";
+
 export default defineConfig({
+  base: "/accesshold/",
   plugins: [react()],
   server: {
     host: "0.0.0.0",
@@ -10,11 +13,11 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:4100",
+        target: apiProxyTarget,
         changeOrigin: true,
       },
       "/mcp": {
-        target: "http://127.0.0.1:4100",
+        target: apiProxyTarget,
         changeOrigin: true,
       },
     },

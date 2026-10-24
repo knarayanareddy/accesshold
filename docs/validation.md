@@ -52,6 +52,19 @@ No real Alexa+ integration/device, live Cognito sign-in or JWT validation, SES i
 
 No TypeScript coverage percentage is claimed. This record does not satisfy the specification's build-complete gate or guarantee physical accessibility.
 
+## Sandbox, Pages, and Compose follow-up — 2026-10-24
+
+| Check | Result |
+| --- | --- |
+| `corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test:unit && corepack pnpm test:e2e` | Passed; typecheck/lint clean, 79/79 unit tests across 17 files, and 4/4 E2E tests |
+| `cd apps/web && corepack pnpm build` | Passed; dashboard production build completed |
+| `VITE_SANDBOX=true corepack pnpm build:web` | Passed; `/accesshold/` static build includes the separate in-memory `sandbox-api` chunk |
+| Local Vite route smoke | Passed; `/accesshold/` and `/accesshold/src/main.tsx` returned HTTP 200 |
+| `corepack pnpm test:compose` | Blocked before launch: Docker CLI is absent, so no Compose stack started |
+| `corepack pnpm record:demo` | Not recorded: Playwright reports its Chromium headless-shell executable is not installed; `docs/media/accesshold-demo.webm` is not generated in this environment |
+
+The Compose launch check and CI workflow are implemented, but no container health or migration run is claimed. The Playwright recorder is typechecked and follows the requested high-contrast, disruption-review, plan-approval and fixture-execution path; an installed Chromium plus a running local stack are required to produce the WebM. GitHub Pages deployment was not run from this workspace. These demos stay fixture-only and do not change the live-integration and release-gate status above.
+
 ## Accessibility and demo-seed follow-up — 2026-10-24
 
 | Check | Result |

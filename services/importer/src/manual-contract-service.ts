@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import type { ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
@@ -51,9 +50,11 @@ function createUlid(at: Date): string {
     throw new Error("invalid_constraint_capture_clock");
   }
 
-  let value =
-    (BigInt(milliseconds) << 80n) |
-    BigInt(`0x${randomBytes(10).toString("hex")}`);
+  const random = globalThis.crypto.getRandomValues(new Uint8Array(10));
+  const randomHex = Array.from(random, (byte) =>
+    byte.toString(16).padStart(2, "0"),
+  ).join("");
+  let value = (BigInt(milliseconds) << 80n) | BigInt(`0x${randomHex}`);
   let encoded = "";
   for (let index = 0; index < 26; index += 1) {
     encoded = `${ULID_ALPHABET[Number(value & 31n)]!}${encoded}`;

@@ -1,22 +1,21 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import schema from "../../../schemas/access-contract.schema.json" with { type: "json" };
+import example from "../../../examples/access-contract.example.json" with { type: "json" };
+import change from "../../../content/demo/hotel-change-v1.json" with { type: "json" };
+import registry from "../../../content/feature-registry/v1.json" with { type: "json" };
+import templates from "../../../content/provider-questions/v1.json" with { type: "json" };
 import type {
   AccessContractDocument,
   ProviderQuestionTemplateSet,
 } from "../../../packages/contracts/src/index.js";
 import type { FeatureRegistry } from "../../../packages/policy-engine/src/index.js";
 import type { ReferenceTravelChange } from "../../../packages/adapters/reference-travel/src/index.js";
-import { FixtureProviderQuestionAdapter } from "../../../packages/adapters/ses/src/index.js";
-import {
-  InMemoryContractRepository,
-  type ContractRepository,
-} from "../../importer/src/contract-repository.js";
+import { FixtureProviderQuestionAdapter } from "../../../packages/adapters/ses/src/fixture-provider-question-adapter.js";
+import { InMemoryContractRepository } from "../../importer/src/in-memory-contract-repository.js";
+import type { ContractRepository } from "../../importer/src/contract-repository.js";
 import { ManualContractService } from "../../importer/src/manual-contract-service.js";
 import { ProviderQuestionService } from "../../importer/src/provider-question-service.js";
-import {
-  FixtureTripArtifactDeletionAdapter,
-  TripDeletionService,
-} from "../../importer/src/trip-deletion-service.js";
+import { FixtureTripArtifactDeletionAdapter } from "../../importer/src/fixture-trip-artifact-deletion-adapter.js";
+import { TripDeletionService } from "../../importer/src/trip-deletion-core.js";
 import { ReferenceTravelMonitor } from "../../monitor/src/reference-travel-monitor.js";
 import { FixtureReferenceTravelAdapter } from "../../../packages/adapters/reference-travel/src/index.js";
 import {
@@ -25,12 +24,6 @@ import {
 } from "../../recovery/src/fixture-recovery-service.js";
 import { FixtureHandoffService } from "../../workflow/src/fixture-workflow-service.js";
 import type { AccessHoldMcpServices } from "../../mcp/src/accesshold-mcp-server.js";
-
-function readJson<T>(relativePath: string): T {
-  return JSON.parse(
-    readFileSync(join(process.cwd(), relativePath), "utf8"),
-  ) as T;
-}
 
 export interface FixtureRuntime extends AccessHoldMcpServices {
   repository: ContractRepository;
@@ -49,32 +42,24 @@ export interface FixtureRuntime extends AccessHoldMcpServices {
 
 /** Creates one deterministic local journey from the checked-in synthetic contract. */
 export async function createFixtureRuntime(): Promise<FixtureRuntime> {
-  const schema = readJson<object>("schemas/access-contract.schema.json");
-  const registry = readJson<FeatureRegistry>(
-    "content/feature-registry/v1.json",
-  );
-  const example = readJson<AccessContractDocument>(
-    "examples/access-contract.example.json",
-  );
-  const change = readJson<ReferenceTravelChange>(
-    "content/demo/hotel-change-v1.json",
-  );
-  const templates = readJson<ProviderQuestionTemplateSet>(
-    "content/provider-questions/v1.json",
-  );
+  const fixtureSchema = schema as object;
+  const fixtureRegistry = registry as FeatureRegistry;
+  const fixtureExample = example as AccessContractDocument;
+  const fixtureChange = change as ReferenceTravelChange;
+  const fixtureTemplates = templates as ProviderQuestionTemplateSet;
   const demoClock = () => new Date("2026-10-24T10:00:00.000Z");
   const repository = new InMemoryContractRepository();
-  await repository.append(example, null);
+  await repository.append(fixtureExample, null);
   const contracts = new ManualContractService(
-    schema,
-    registry,
+    fixtureSchema,
+    fixtureRegistry,
     repository,
     demoClock,
   );
   const providerQuestions = new ProviderQuestionService(
     contracts,
     new FixtureProviderQuestionAdapter(demoClock),
-    templates,
+    fixtureTemplates,
     demoClock,
   );
   const deletion = new TripDeletionService(
@@ -84,13 +69,16 @@ export async function createFixtureRuntime(): Promise<FixtureRuntime> {
     demoClock,
   );
   const monitor = new ReferenceTravelMonitor(
-    schema,
-    registry,
+    fixtureSchema,
+    fixtureRegistry,
     repository,
-    new FixtureReferenceTravelAdapter([change]),
+    new FixtureReferenceTravelAdapter([fixtureChange]),
     demoClock,
   );
-  const changeResult = await monitor.ingest(change, example.traveler_id);
+  const changeResult = await monitor.ingest(
+    fixtureChange,
+    fixtureExample.traveler_id,
+  );
   const recovery = new FixtureRecoveryService(demoClock, [
     changeResult.affected_asset,
   ]);
@@ -100,7 +88,7 @@ export async function createFixtureRuntime(): Promise<FixtureRuntime> {
     summary:
       "TEST PROVIDER replacement room option; the new room's shower configuration remains unconfirmed.",
     action: "sandbox_rebook",
-    asset_id: change.asset_id,
+    asset_id: fixtureChange.asset_id,
     asset_version: changeResult.affected_asset.asset_version,
     evidence_id: changeResult.affected_asset.evidence_id,
     evidence_version: changeResult.affected_asset.evidence_version,
@@ -115,7 +103,10 @@ export async function createFixtureRuntime(): Promise<FixtureRuntime> {
       "The replacement room's shower configuration has not been independently confirmed.",
     ],
   };
-  const cases = await monitor.cases(example.trip.trip_id, example.traveler_id);
+  const cases = await monitor.cases(
+    fixtureExample.trip.trip_id,
+    fixtureExample.traveler_id,
+  );
   const recoveryCase = cases.find(
     (item) => item.case_id === changeResult.recovery_case?.case_id,
   );
@@ -160,9 +151,9 @@ export async function createFixtureRuntime(): Promise<FixtureRuntime> {
     monitor,
     recovery,
     handoff,
-    registry,
-    actorTravelerId: example.traveler_id,
-    demoTripId: example.trip.trip_id,
+    registry: fixtureRegistry,
+    actorTravelerId: fixtureExample.traveler_id,
+    demoTripId: fixtureExample.trip.trip_id,
     demoCaseId: recoveryCase.case_id,
     demoOptionId: recoveryOption.option_id,
     demoClock,

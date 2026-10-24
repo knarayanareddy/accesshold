@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "../../../packages/domain/src/hash.js";
 import type { ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
@@ -117,7 +117,7 @@ function canonicalize(value: unknown): string {
 }
 
 function fingerprint(value: unknown): string {
-  return createHash("sha256").update(canonicalize(value)).digest("hex");
+  return sha256Hex(canonicalize(value));
 }
 
 function uniqueSorted(values: string[]): string[] {
