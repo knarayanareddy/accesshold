@@ -24,6 +24,9 @@ beforeEach(async () => {
   originalTravelerId = process.env.ACCESSHOLD_FIXTURE_TRAVELER_ID;
   process.env.ACCESSHOLD_FIXTURE_TOKEN = fixtureToken;
   delete process.env.ACCESSHOLD_FIXTURE_TRAVELER_ID;
+  window.localStorage.clear();
+  document.documentElement.removeAttribute("data-contrast");
+  document.documentElement.removeAttribute("data-reduced-motion");
   requestedRoutes = [];
 
   const runtime = await createFixtureRuntime();
@@ -58,6 +61,9 @@ beforeEach(async () => {
 
 afterEach(async () => {
   cleanup();
+  window.localStorage.clear();
+  document.documentElement.removeAttribute("data-contrast");
+  document.documentElement.removeAttribute("data-reduced-motion");
   if (app) await app.close();
   app = undefined;
   globalThis.fetch = originalFetch;
@@ -116,6 +122,9 @@ describe("coordinator dashboard + Fastify /api/v1 smoke flow", () => {
     );
     expect(await screen.findByText("Pending your approval")).toBeTruthy();
     expect(
+      screen.getByRole("status", { name: "Recovery plan updates" }).textContent,
+    ).toContain("A pending plan is ready");
+    expect(
       requestedRoutes.some(
         (request) =>
           request.method === "POST" &&
@@ -158,5 +167,150 @@ describe("coordinator dashboard + Fastify /api/v1 smoke flow", () => {
     expect(
       requestedRoutes.some((request) => request.url.includes("/api/v1/")),
     ).toBe(true);
+  });
+
+  it("supports skip-link navigation and exposes named screen-reader landmarks", async () => {
+    const user = userEvent.setup();
+    render(createElement(App));
+
+    await screen.findByRole("heading", { name: "Trips and change queue" });
+    const skipLink = screen.getByRole("link", {
+      name: "Skip to main content",
+    });
+    await user.tab();
+    expect(document.activeElement).toBe(skipLink);
+    await user.keyboard("{Enter}");
+
+    const main = screen.getByRole("main");
+    expect(document.activeElement).toBe(main);
+    expect(window.location.hash).toBe("#main");
+    expect(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("banner")).toBeTruthy();
+    expect(screen.getByRole("contentinfo")).toBeTruthy();
+  });
+
+  it("toggles persistent high contrast with a keyboard-trapped preferences dialog", async () => {
+    const user = userEvent.setup();
+    const view = render(createElement(App));
+    await screen.findByRole("heading", { name: "Trips and change queue" });
+
+    const preferencesButton = screen.getByRole("button", {
+      name: "Accessibility preferences",
+    });
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(document.activeElement).toBe(preferencesButton);
+    await user.keyboard("{Enter}");
+
+    const dialog = await screen.findByRole("dialog", {
+      name: "Accessibility preferences",
+    });
+    const highContrastSwitch = screen.getByRole("switch", {
+      name: "High contrast mode",
+    });
+    const reduceMotionSwitch = screen.getByRole("switch", {
+      name: "Reduce motion",
+    });
+    const closeButton = screen.getByRole("button", {
+      name: "Close accessibility preferences",
+    });
+    await waitFor(() =>
+      expect(document.activeElement).toBe(highContrastSwitch),
+    );
+    const workspace = document.querySelector(".workspace");
+    expect(workspace?.getAttribute("aria-hidden")).toBe("true");
+    expect(workspace?.hasAttribute("inert")).toBe(true);
+
+    await user.keyboard(" ");
+    await waitFor(() => {
+      expect(document.documentElement.dataset.contrast).toBe("high");
+      expect((highContrastSwitch as HTMLInputElement).checked).toBe(true);
+    });
+    expect(
+      window.localStorage.getItem("accesshold.accessibility.preferences.v1"),
+    ).toContain('"highContrast":true');
+
+    await user.tab();
+    expect(document.activeElement).toBe(reduceMotionSwitch);
+    await user.keyboard(" ");
+    await waitFor(() => {
+      expect(document.documentElement.dataset.reducedMotion).toBe("reduce");
+      expect((reduceMotionSwitch as HTMLInputElement).checked).toBe(true);
+    });
+    expect(
+      window.localStorage.getItem("accesshold.accessibility.preferences.v1"),
+    ).toContain('"reduceMotion":true');
+
+    await user.tab();
+    expect(document.activeElement).toBe(closeButton);
+    await user.tab();
+    expect(document.activeElement).toBe(highContrastSwitch);
+    await user.tab({ shift: true });
+    expect(document.activeElement).toBe(closeButton);
+
+    await user.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("dialog", { name: "Accessibility preferences" }),
+      ).toBeNull();
+      expect(document.activeElement).toBe(preferencesButton);
+    });
+    expect(dialog.getAttribute("aria-modal")).toBe("true");
+
+    view.unmount();
+    render(createElement(App));
+    await screen.findByRole("heading", { name: "Trips and change queue" });
+    expect(document.documentElement.dataset.contrast).toBe("high");
+    expect(document.documentElement.dataset.reducedMotion).toBe("reduce");
+    await user.click(
+      screen.getByRole("button", { name: "Accessibility preferences" }),
+    );
+    expect(
+      (
+        (await screen.findByRole("switch", {
+          name: "High contrast mode",
+        })) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+    expect(
+      (
+        (await screen.findByRole("switch", {
+          name: "Reduce motion",
+        })) as HTMLInputElement
+      ).checked,
+    ).toBe(true);
+  });
+
+  it("announces provider-question status changes in its live region", async () => {
+    const user = userEvent.setup();
+    render(createElement(App));
+    await screen.findByRole("heading", { name: "Trips and change queue" });
+
+    await user.click(screen.getByRole("button", { name: /Access Contract/ }));
+    await screen.findByRole("heading", { name: "Review your Access Contract" });
+    await user.click(screen.getByRole("button", { name: "Draft question" }));
+    await screen.findByRole("button", {
+      name: "Approve this exact message and send",
+    });
+    expect(
+      screen.getByRole("status", { name: "Provider question status" })
+        .textContent,
+    ).toContain("draft ready for review");
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve this exact message and send",
+      }),
+    );
+    await waitFor(() => {
+      expect(
+        screen.getByRole("status", { name: "Provider question status" })
+          .textContent,
+      ).toContain("no provider confirmation has been received");
+    });
   });
 });

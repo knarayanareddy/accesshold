@@ -1,8 +1,21 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   AccessConstraint,
   AccessContractDocument,
 } from "../../../packages/contracts/src/index.js";
+import {
+  applyAccessibilityPreferences,
+  loadAccessibilityPreferences,
+  persistAccessibilityPreferences,
+  type AccessibilityPreferences,
+} from "./accessibility-preferences.js";
 import {
   ApiError,
   apiRequest,
@@ -16,6 +29,10 @@ import {
 
 type Screen = "trips" | "contract" | "disruption" | "recovery" | "privacy";
 type NoticeTone = "info" | "warning" | "success" | "error";
+type AnnouncementTarget = "general" | "recovery" | "provider-question";
+
+const DIALOG_FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface Notice {
   message: string;
@@ -165,6 +182,16 @@ function ErrorMessage({ message }: { message: string }) {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("trips");
+  const [accessibilityPreferences, setAccessibilityPreferences] =
+    useState<AccessibilityPreferences>(loadAccessibilityPreferences);
+  const [isAccessibilityPreferencesOpen, setIsAccessibilityPreferencesOpen] =
+    useState(false);
+  const [generalAnnouncement, setGeneralAnnouncement] = useState("");
+  const [recoveryPlanAnnouncement, setRecoveryPlanAnnouncement] = useState("");
+  const [providerQuestionAnnouncement, setProviderQuestionAnnouncement] =
+    useState("");
+  const accessibilityTriggerRef = useRef<HTMLButtonElement>(null);
+  const accessibilityDialogRef = useRef<HTMLElement>(null);
   const [trips, setTrips] = useState<TripSummary[]>([]);
   const [tripId, setTripId] = useState<string | null>(null);
   const [details, setDetails] = useState<TripDetails | null>(null);
@@ -262,6 +289,64 @@ export default function App() {
     [tripId],
   );
 
+  useLayoutEffect(() => {
+    applyAccessibilityPreferences(accessibilityPreferences);
+    persistAccessibilityPreferences(accessibilityPreferences);
+  }, [accessibilityPreferences]);
+
+  useLayoutEffect(() => {
+    if (!isAccessibilityPreferencesOpen) return;
+    const dialog = accessibilityDialogRef.current;
+    if (!dialog) return;
+
+    const previouslyFocused = accessibilityTriggerRef.current;
+    const focusableElements = () =>
+      Array.from(
+        dialog.querySelectorAll<HTMLElement>(DIALOG_FOCUSABLE_SELECTOR),
+      ).filter(
+        (element) =>
+          !element.hidden && element.getAttribute("aria-hidden") !== "true",
+      );
+    const initialFocus =
+      dialog.querySelector<HTMLElement>("[data-dialog-initial-focus]") ??
+      focusableElements()[0];
+    initialFocus?.focus();
+
+    const handleDialogKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setIsAccessibilityPreferencesOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = focusableElements();
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+      if (!dialog.contains(document.activeElement)) {
+        event.preventDefault();
+        first.focus();
+      } else if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleDialogKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleDialogKeyDown);
+      if (previouslyFocused?.isConnected) previouslyFocused.focus();
+    };
+  }, [isAccessibilityPreferencesOpen]);
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -287,13 +372,22 @@ export default function App() {
     name: string,
     action: () => Promise<T>,
     success: (result: T) => string,
+    announcementTarget: AnnouncementTarget = "general",
   ) => {
     setBusyAction(name);
     setError(null);
     setNotice(null);
     try {
       const result = await action();
-      setNotice({ message: success(result), tone: "success" });
+      const message = success(result);
+      setNotice({ message, tone: "success" });
+      if (announcementTarget === "recovery") {
+        setRecoveryPlanAnnouncement(message);
+      } else if (announcementTarget === "provider-question") {
+        setProviderQuestionAnnouncement(message);
+      } else {
+        setGeneralAnnouncement(message);
+      }
       return result;
     } catch (cause) {
       setError(
@@ -353,8 +447,14 @@ export default function App() {
           },
         ),
       () => "Question drafted for review. Nothing has been sent.",
+      "provider-question",
     );
-    if (created) setQuestionDraft(created.draft);
+    if (created) {
+      setQuestionDraft(created.draft);
+      setProviderQuestionAnnouncement(
+        "Provider question status: draft ready for review; nothing has been sent.",
+      );
+    }
   };
 
   const approveAndSendQuestion = async () => {
@@ -373,8 +473,14 @@ export default function App() {
         }),
       () =>
         "TEST PROVIDER message recorded. SES/provider confirmation has not been received.",
+      "provider-question",
     );
-    if (result) setQuestionDraft(null);
+    if (result) {
+      setQuestionDraft(null);
+      setProviderQuestionAnnouncement(
+        "Provider question status: sent to the test provider; no provider confirmation has been received.",
+      );
+    }
   };
 
   const selectOption = async () => {
@@ -394,6 +500,7 @@ export default function App() {
           }),
         }),
       () => "A pending plan is ready. It has not been approved or executed.",
+      "recovery",
     );
     if (result) {
       setPlan({
@@ -423,6 +530,7 @@ export default function App() {
           },
         ),
       () => "Exact plan approved. No provider action has been executed yet.",
+      "recovery",
     );
     if (result) setApproval(result);
   };
@@ -438,6 +546,7 @@ export default function App() {
         }),
       () =>
         "TEST PROVIDER action recorded. Waiting for an independently imported confirmation.",
+      "recovery",
     );
     if (result) setReceipt(result);
   };
@@ -581,11 +690,27 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <a className="skip-link" href="#main">
+      <a
+        className="skip-link"
+        aria-hidden={isAccessibilityPreferencesOpen}
+        inert={isAccessibilityPreferencesOpen}
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          const main = document.getElementById("main");
+          main?.focus();
+          main?.scrollIntoView?.({ block: "start" });
+          window.history.replaceState(null, "", "#main");
+        }}
+      >
         Skip to main content
       </a>
-      <header className="global-header">
-        <div className="brand-lockup" aria-label="AccessHold home">
+      <header
+        className="global-header"
+        aria-hidden={isAccessibilityPreferencesOpen}
+        inert={isAccessibilityPreferencesOpen}
+      >
+        <div className="brand-lockup">
           <span className="brand-mark" aria-hidden="true">
             <Icon name="shield" />
           </span>
@@ -614,13 +739,29 @@ export default function App() {
           >
             AR
           </button>
+          <button
+            ref={accessibilityTriggerRef}
+            className="icon-button accessibility-button"
+            type="button"
+            onClick={() => setIsAccessibilityPreferencesOpen(true)}
+            aria-label="Accessibility preferences"
+            aria-haspopup="dialog"
+            aria-expanded={isAccessibilityPreferencesOpen}
+          >
+            <span aria-hidden="true">Aa</span>
+            <span>Accessibility</span>
+          </button>
         </div>
       </header>
 
-      <div className="workspace">
-        <aside className="sidebar" aria-label="Main navigation">
+      <div
+        className="workspace"
+        aria-hidden={isAccessibilityPreferencesOpen}
+        inert={isAccessibilityPreferencesOpen}
+      >
+        <aside className="sidebar" aria-label="Workspace sidebar">
           <p className="nav-caption">WORKSPACE</p>
-          <nav className="primary-nav">
+          <nav className="primary-nav" aria-label="Primary navigation">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.id}
@@ -659,7 +800,7 @@ export default function App() {
           {notice ? (
             <div
               className={`notice-banner notice-${notice.tone}`}
-              role="status"
+              aria-live="off"
             >
               {notice.message}
             </div>
@@ -771,13 +912,130 @@ export default function App() {
         </main>
       </div>
 
-      <footer className="global-footer">
+      <footer
+        className="global-footer"
+        aria-hidden={isAccessibilityPreferencesOpen}
+        inert={isAccessibilityPreferencesOpen}
+      >
         <span>
           AccessHold provides evidence and workflow state — not an accessibility
           guarantee.
         </span>
         <span className="footer-code">LOCAL FIXTURE · NOT A LIVE BOOKING</span>
       </footer>
+
+      {isAccessibilityPreferencesOpen ? (
+        <div
+          className="accessibility-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              setIsAccessibilityPreferencesOpen(false);
+            }
+          }}
+        >
+          <section
+            id="accessibility-preferences-dialog"
+            ref={accessibilityDialogRef}
+            className="accessibility-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="accessibility-dialog-title"
+            aria-describedby="accessibility-dialog-description"
+            tabIndex={-1}
+          >
+            <div className="accessibility-dialog-heading">
+              <div>
+                <p className="eyebrow">DISPLAY AND MOTION</p>
+                <h2 id="accessibility-dialog-title">
+                  Accessibility preferences
+                </h2>
+              </div>
+            </div>
+            <p id="accessibility-dialog-description" className="muted-copy">
+              These choices are saved on this device and can be changed at any
+              time.
+            </p>
+            <div className="accessibility-settings">
+              <label className="accessibility-setting-row">
+                <span className="accessibility-setting-copy">
+                  <strong>High contrast mode</strong>
+                  <span>
+                    Use a black background, bright text, and clear outlines.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-label="High contrast mode"
+                  data-dialog-initial-focus="true"
+                  checked={accessibilityPreferences.highContrast}
+                  onChange={(event) =>
+                    setAccessibilityPreferences((current) => ({
+                      ...current,
+                      highContrast: event.target.checked,
+                    }))
+                  }
+                />
+              </label>
+              <label className="accessibility-setting-row">
+                <span className="accessibility-setting-copy">
+                  <strong>Reduce motion</strong>
+                  <span>Minimize transitions and smooth scrolling.</span>
+                </span>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-label="Reduce motion"
+                  checked={accessibilityPreferences.reduceMotion}
+                  onChange={(event) =>
+                    setAccessibilityPreferences((current) => ({
+                      ...current,
+                      reduceMotion: event.target.checked,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+            <div className="accessibility-dialog-actions">
+              <button
+                className="button button-primary"
+                type="button"
+                onClick={() => setIsAccessibilityPreferencesOpen(false)}
+              >
+                Close accessibility preferences
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      <div
+        className="sr-only"
+        role="status"
+        aria-label="General status updates"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {generalAnnouncement}
+      </div>
+      <div
+        className="sr-only"
+        role="status"
+        aria-label="Recovery plan updates"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {recoveryPlanAnnouncement}
+      </div>
+      <div
+        className="sr-only"
+        role="status"
+        aria-label="Provider question status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {providerQuestionAnnouncement}
+      </div>
     </div>
   );
 }
@@ -1096,33 +1354,37 @@ function ContractScreen({
           aria-label="Access requirements"
         >
           {sorted.map((constraint, index) => (
-            <button
+            <div
               key={constraint.constraint_id}
-              className={`constraint-row ${selectedConstraintId === constraint.constraint_id ? "constraint-row-selected" : ""}`}
-              type="button"
-              onClick={() => onSelectConstraint(constraint.constraint_id)}
+              className="constraint-list-item"
               role="listitem"
-              aria-pressed={selectedConstraintId === constraint.constraint_id}
             >
-              <span className="constraint-index">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <span className="constraint-copy">
-                <span
-                  className={`priority-label priority-${constraint.priority}`}
-                >
-                  {constraint.priority === "hard"
-                    ? "HARD REQUIREMENT"
-                    : "PREFERENCE"}
+              <button
+                className={`constraint-row ${selectedConstraintId === constraint.constraint_id ? "constraint-row-selected" : ""}`}
+                type="button"
+                onClick={() => onSelectConstraint(constraint.constraint_id)}
+                aria-pressed={selectedConstraintId === constraint.constraint_id}
+              >
+                <span className="constraint-index">
+                  {String(index + 1).padStart(2, "0")}
                 </span>
-                <strong>{constraint.traveler_text}</strong>
-                <span>
-                  {constraint.applies_to.length} applicable asset
-                  {constraint.applies_to.length === 1 ? "" : "s"}
+                <span className="constraint-copy">
+                  <span
+                    className={`priority-label priority-${constraint.priority}`}
+                  >
+                    {constraint.priority === "hard"
+                      ? "HARD REQUIREMENT"
+                      : "PREFERENCE"}
+                  </span>
+                  <strong>{constraint.traveler_text}</strong>
+                  <span>
+                    {constraint.applies_to.length} applicable asset
+                    {constraint.applies_to.length === 1 ? "" : "s"}
+                  </span>
                 </span>
-              </span>
-              <StatusBadge status={constraint.status} />
-            </button>
+                <StatusBadge status={constraint.status} />
+              </button>
+            </div>
           ))}
         </div>
         <div className="contract-actions">
@@ -1258,7 +1520,7 @@ function ContractScreen({
               </p>
             </div>
           ) : (
-            <div className="draft-review" aria-live="polite">
+            <div className="draft-review">
               <div className="draft-topline">
                 <StatusBadge status="unverified" />
                 <span>Expires {formatDateTime(questionDraft.expires_at)}</span>

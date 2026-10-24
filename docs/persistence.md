@@ -17,7 +17,11 @@ The workflow table now has a sparse `TravelerContractsIndex` GSI (`gsi1pk` / `gs
 
 ## Configuration and use
 
-`createContractRepositoryFromEnvironment()` returns a repository plus a `close()` hook. Set `CONTRACT_REPOSITORY_DRIVER=postgres` with `DATABASE_URL`, or `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, and JSON `DATABASE_CREDENTIALS`. For DynamoDB, set `CONTRACT_REPOSITORY_DRIVER=dynamodb` and `WORKFLOW_TABLE_NAME`; AWS credentials and region use the standard SDK provider chain and `AWS_REGION`.
+`ContractRepositoryFactory.fromEnvironment()` (also exposed through the existing `createContractRepositoryFromEnvironment()` function) returns a repository plus a `close()` hook. Set `CONTRACT_REPOSITORY_DRIVER=postgres` with `DATABASE_URL`, or `DATABASE_HOST`, `DATABASE_PORT`, `DATABASE_NAME`, and JSON `DATABASE_CREDENTIALS`. For DynamoDB, set `CONTRACT_REPOSITORY_DRIVER=dynamodb` and `WORKFLOW_TABLE_NAME`; AWS credentials and region use the standard SDK provider chain and `AWS_REGION`.
+
+### Synthetic traveler seed
+
+Run `pnpm seed:traveler-data -- --driver postgres` or `--driver dynamodb` to seed the selected durable repository. `--driver both` runs the same idempotent seed against both configured backends; PostgreSQL needs the connection settings above, while DynamoDB needs the workflow table and AWS SDK configuration. Existing fixture records with the seed's stable contract identities are left unchanged; conflicting trip IDs fail rather than overwrite traveler data. `--dry-run` validates and prints the sample bundle without opening a database connection. The command emits a JSON report with the two fixture itineraries and simulated flight-delay/gate-change scenarios, including pre-calculated rebooking/provider-request options; `--scenarios-output <file>` writes a scenario-only JSON bundle with those options to a file. All options require traveler approval and carry `live_action: false`; rebooking options use `TEST-` inventory references. These are synthetic examples, not provider observations or booking offers.
 
 The local API still deliberately composes its fixture runtime and in-memory store. A production API/worker composition and Cognito JWT authorization are not enabled by this change. ECS task definitions declare the PostgreSQL driver, but no database connection or migration was exercised here.
 

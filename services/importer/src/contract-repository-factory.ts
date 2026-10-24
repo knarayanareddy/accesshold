@@ -84,22 +84,31 @@ export function createPostgresPoolConfig(
   };
 }
 
+/** A supported durable driver for contract records. */
+export type ContractRepositoryDriver = "postgres" | "dynamodb";
+
 /**
- * Creates a durable repository from explicit deployment configuration.
+ * Creates durable repositories from explicit deployment configuration.
  * Fixture runtimes should continue to construct their fixture repository directly.
  */
-export function createContractRepositoryFromEnvironment(
-  env: NodeJS.ProcessEnv = process.env,
-): ContractRepositoryHandle {
-  const driver = env.CONTRACT_REPOSITORY_DRIVER;
-  if (driver === "postgres") {
-    const pool = new Pool(createPostgresPoolConfig(env));
-    return {
-      repository: new PostgresContractRepository(pool),
-      close: () => pool.end(),
-    };
-  }
-  if (driver === "dynamodb") {
+export class ContractRepositoryFactory {
+  static create(
+    driver: ContractRepositoryDriver,
+    env: NodeJS.ProcessEnv = process.env,
+  ): ContractRepositoryHandle {
+    if (driver === "postgres") {
+      const pool = new Pool(createPostgresPoolConfig(env));
+      return {
+        repository: new PostgresContractRepository(pool),
+        close: () => pool.end(),
+      };
+    }
+    if (driver !== "dynamodb") {
+      throw new Error(
+        "contract_repository_driver_must_be_postgres_or_dynamodb",
+      );
+    }
+
     const tableName = env.WORKFLOW_TABLE_NAME;
     if (!tableName)
       throw new Error("dynamodb_workflow_table_configuration_required");
@@ -115,5 +124,22 @@ export function createContractRepositoryFromEnvironment(
       close: async () => sdkClient.destroy(),
     };
   }
-  throw new Error("contract_repository_driver_must_be_postgres_or_dynamodb");
+
+  static fromEnvironment(
+    env: NodeJS.ProcessEnv = process.env,
+  ): ContractRepositoryHandle {
+    const driver = env.CONTRACT_REPOSITORY_DRIVER;
+    if (driver !== "postgres" && driver !== "dynamodb") {
+      throw new Error(
+        "contract_repository_driver_must_be_postgres_or_dynamodb",
+      );
+    }
+    return ContractRepositoryFactory.create(driver, env);
+  }
+}
+
+export function createContractRepositoryFromEnvironment(
+  env: NodeJS.ProcessEnv = process.env,
+): ContractRepositoryHandle {
+  return ContractRepositoryFactory.fromEnvironment(env);
 }

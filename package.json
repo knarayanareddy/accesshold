@@ -20,6 +20,7 @@
     "test:integration": "vitest run tests/integration",
     "test:e2e": "vitest run tests/e2e",
     "migrate:postgres": "tsx scripts/migrate-postgres-contracts.ts",
+    "seed:traveler-data": "tsx scripts/seed-traveler-data.ts",
     "test:security": "vitest run tests/security && corepack pnpm audit --audit-level=moderate",
     "typecheck:infra": "tsc -p infra/tsconfig.json",
     "test:infra": "vitest run infra/test",
