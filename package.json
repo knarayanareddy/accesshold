@@ -9,28 +9,50 @@
   },
   "scripts": {
     "dev": "tsx scripts/walking-skeleton.ts",
+    "dev:api": "tsx services/api/src/server.ts",
+    "dev:web": "vite apps/web --config apps/web/vite.config.ts --host 0.0.0.0",
     "build": "tsc -p tsconfig.build.json",
-    "lint": "eslint packages services scripts tests && prettier --check \"packages/**/*.ts\" \"services/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"*.{json,mjs}\"",
-    "typecheck": "tsc --noEmit",
+    "build:web": "tsc -p apps/web/tsconfig.json && vite build apps/web --config apps/web/vite.config.ts",
+    "lint": "eslint packages services scripts tests apps/web infra && prettier --check \"packages/**/*.ts\" \"services/**/*.ts\" \"scripts/**/*.ts\" \"tests/**/*.ts\" \"apps/web/**/*.{ts,tsx,css,html,json}\" \"infra/**/*.{ts,json}\" \"*.{json,mjs}\"",
+    "typecheck": "tsc --noEmit && tsc -p apps/web/tsconfig.json && tsc -p infra/tsconfig.json",
     "test:unit": "vitest run tests/unit",
     "test:contract": "vitest run tests/contract",
-    "test:security": "vitest run tests/security && corepack pnpm audit --audit-level=moderate"
+    "test:security": "vitest run tests/security && corepack pnpm audit --audit-level=moderate",
+    "typecheck:infra": "tsc -p infra/tsconfig.json",
+    "test:infra": "vitest run infra/test",
+    "synth:infra": "cd infra && ../node_modules/.bin/cdk synth --quiet"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@types/node": "22.18.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
+    "aws-cdk": "^2.1146.1",
     "eslint": "10.13.0",
     "prettier": "3.6.2",
     "tsx": "4.20.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.72.0",
+    "vite": "^8.3.5",
     "vitest": "5.0.5"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
     ]
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1156.0",
+    "@aws-sdk/client-sesv2": "^3.1156.0",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "aws-cdk-lib": "^2.274.0",
+    "constructs": "^10.8.1",
+    "fastify": "^5.12.7",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "4.6.7"
   }
 }

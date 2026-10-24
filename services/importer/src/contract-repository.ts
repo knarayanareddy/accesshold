@@ -7,10 +7,12 @@ import type { AccessContractDocument } from "../../../packages/contracts/src/ind
 export interface ContractRepository {
   current(tripId: string): Promise<AccessContractDocument | undefined>;
   versions(tripId: string): Promise<AccessContractDocument[]>;
+  listCurrent(): Promise<AccessContractDocument[]>;
   append(
     document: AccessContractDocument,
     expectedVersion: number | null,
   ): Promise<void>;
+  deleteTrip(tripId: string, expectedVersion: number): Promise<number>;
 }
 
 function clone(document: AccessContractDocument): AccessContractDocument {
@@ -44,6 +46,10 @@ export class InMemoryContractRepository implements ContractRepository {
       .map(clone);
   }
 
+  async listCurrent(): Promise<AccessContractDocument[]> {
+    return [...latestVersions(this.documents).values()].map(clone);
+  }
+
   async append(
     document: AccessContractDocument,
     expectedVersion: number | null,
@@ -70,6 +76,21 @@ export class InMemoryContractRepository implements ContractRepository {
       throw new Error("contract_version_already_exists");
     }
     this.documents.push(clone(document));
+  }
+
+  async deleteTrip(tripId: string, expectedVersion: number): Promise<number> {
+    const current = latestVersions(this.documents).get(tripId);
+    if (!current) throw new Error("trip_not_found");
+    if (current.version !== expectedVersion)
+      throw new Error("optimistic_version_conflict");
+    let deleted = 0;
+    for (let index = this.documents.length - 1; index >= 0; index -= 1) {
+      if (this.documents[index]!.trip.trip_id === tripId) {
+        this.documents.splice(index, 1);
+        deleted += 1;
+      }
+    }
+    return deleted;
   }
 }
 
@@ -145,6 +166,10 @@ export class JsonFileFixtureContractRepository implements ContractRepository {
       .map(clone);
   }
 
+  async listCurrent(): Promise<AccessContractDocument[]> {
+    return [...latestVersions(await this.readAll()).values()].map(clone);
+  }
+
   async append(
     document: AccessContractDocument,
     expectedVersion: number | null,
@@ -171,5 +196,19 @@ export class JsonFileFixtureContractRepository implements ContractRepository {
     }
     documents.push(clone(document));
     await this.writeAll(documents);
+  }
+
+  async deleteTrip(tripId: string, expectedVersion: number): Promise<number> {
+    const documents = await this.readAll();
+    const current = latestVersions(documents).get(tripId);
+    if (!current) throw new Error("trip_not_found");
+    if (current.version !== expectedVersion)
+      throw new Error("optimistic_version_conflict");
+    const retained = documents.filter(
+      (document) => document.trip.trip_id !== tripId,
+    );
+    const deleted = documents.length - retained.length;
+    await this.writeAll(retained);
+    return deleted;
   }
 }

@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://specs.local/accesshold/mcp/tools.schema.json",
+  "title": "AccessHold MCP tool contracts",
+  "description": "JSON Schema definitions for MCP tool inputs and outputs. All tool operations are traveler-scoped and fixture-only until production identity, persistence, and adapters are configured.",
+  "$defs": {
+    "ulid": { "type": "string", "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "instant": { "type": "string", "format": "date-time" },
+    "watch_trip_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trip_import_id", "confirmed_contract_version"],
+      "properties": {
+        "trip_import_id": { "$ref": "#/$defs/ulid" },
+        "confirmed_contract_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "watch_trip_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trip_id",
+        "status",
+        "unknown_count",
+        "monitoring_authorized",
+        "provenance"
+      ],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "status": {
+          "enum": ["active", "degraded", "violated", "recovering", "closed"]
+        },
+        "unknown_count": { "type": "integer", "minimum": 0 },
+        "monitoring_authorized": { "type": "boolean" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "get_trip_status_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trip_id"],
+      "properties": { "trip_id": { "$ref": "#/$defs/ulid" } }
+    },
+    "changed_asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["asset_id", "asset_version", "change_event_id"],
+      "properties": {
+        "asset_id": { "$ref": "#/$defs/ulid" },
+        "asset_version": { "type": "integer", "minimum": 0 },
+        "change_event_id": { "type": ["string", "null"], "maxLength": 128 }
+      }
+    },
+    "get_trip_status_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trip_id",
+        "status",
+        "hard_constraint_counts",
+        "unknown_count",
+        "changed_assets",
+        "as_of",
+        "card_uri",
+        "provenance"
+      ],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "status": {
+          "enum": ["active", "degraded", "violated", "recovering", "closed"]
+        },
+        "hard_constraint_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["satisfied", "violated", "unknown", "not_applicable"],
+          "properties": {
+            "satisfied": { "type": "integer", "minimum": 0 },
+            "violated": { "type": "integer", "minimum": 0 },
+            "unknown": { "type": "integer", "minimum": 0 },
+            "not_applicable": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "unknown_count": { "type": "integer", "minimum": 0 },
+        "changed_assets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/changed_asset" }
+        },
+        "as_of": { "$ref": "#/$defs/instant" },
+        "card_uri": { "type": "string", "format": "uri" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "get_evidence_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trip_id", "constraint_id"],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "constraint_id": { "$ref": "#/$defs/ulid" }
+      }
+    },
+    "evidence_feature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value_type", "unit"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "value_type": {
+          "enum": ["boolean", "number", "text_withheld", "unknown"]
+        },
+        "unit": { "type": ["string", "null"], "maxLength": 32 },
+        "value": { "type": ["boolean", "number", "null"] }
+      }
+    },
+    "evidence_item": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "asset_id",
+        "evidence_level",
+        "source_type",
+        "observed_at",
+        "expires_at",
+        "features",
+        "safe_excerpt_uri"
+      ],
+      "properties": {
+        "evidence_id": { "$ref": "#/$defs/ulid" },
+        "asset_id": { "$ref": "#/$defs/ulid" },
+        "evidence_level": {
+          "enum": ["provider_confirmed", "documented", "unverified"]
+        },
+        "source_type": {
+          "enum": [
+            "official_api",
+            "provider_written",
+            "provider_document",
+            "traveler_supplied",
+            "review",
+            "fixture"
+          ]
+        },
+        "observed_at": { "$ref": "#/$defs/instant" },
+        "expires_at": {
+          "oneOf": [{ "$ref": "#/$defs/instant" }, { "type": "null" }]
+        },
+        "features": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_feature" }
+        },
+        "safe_excerpt_uri": { "type": ["string", "null"], "format": "uri" }
+      }
+    },
+    "get_evidence_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trip_id",
+        "constraint_id",
+        "items",
+        "card_uri",
+        "provenance"
+      ],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "constraint_id": { "$ref": "#/$defs/ulid" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence_item" }
+        },
+        "card_uri": { "type": "string", "format": "uri" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "list_recovery_options_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id"],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+      }
+    },
+    "recovery_option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "option_id",
+        "summary",
+        "action",
+        "amount_minor",
+        "currency",
+        "terms",
+        "expires_at",
+        "unknowns"
+      ],
+      "properties": {
+        "option_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "summary": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "action": { "const": "sandbox_rebook" },
+        "amount_minor": { "type": "integer", "minimum": 0 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "terms": { "type": "string", "minLength": 1, "maxLength": 1000 },
+        "expires_at": { "$ref": "#/$defs/instant" },
+        "unknowns": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+        }
+      }
+    },
+    "list_recovery_options_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "option_set_version",
+        "options",
+        "no_action",
+        "card_uri",
+        "provenance"
+      ],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "option_set_version": { "type": "integer", "minimum": 1 },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recovery_option" }
+        },
+        "no_action": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["option_id", "summary"],
+          "properties": {
+            "option_id": { "const": "no_action" },
+            "summary": { "type": "string", "minLength": 1, "maxLength": 500 }
+          }
+        },
+        "card_uri": { "type": "string", "format": "uri" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "select_recovery_option_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "option_id", "expected_version"],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "option_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "expected_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "select_recovery_option_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plan_id",
+        "plan_sha256",
+        "expires_at",
+        "card_uri",
+        "provenance"
+      ],
+      "properties": {
+        "plan_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "plan_sha256": { "$ref": "#/$defs/sha256" },
+        "expires_at": { "$ref": "#/$defs/instant" },
+        "card_uri": { "type": "string", "format": "uri" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "approve_recovery_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan_id", "plan_sha256", "approval_phrase"],
+      "properties": {
+        "plan_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "plan_sha256": { "$ref": "#/$defs/sha256" },
+        "approval_phrase": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
+    },
+    "approve_recovery_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "plan_sha256",
+        "approval_id",
+        "execution_task_id",
+        "provider_notice",
+        "provenance"
+      ],
+      "properties": {
+        "status": { "enum": ["executed_fixture", "web_approval_required"] },
+        "plan_sha256": { "$ref": "#/$defs/sha256" },
+        "approval_id": { "type": ["string", "null"], "maxLength": 128 },
+        "execution_task_id": { "type": ["string", "null"], "maxLength": 128 },
+        "provider_notice": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "request_human_handoff_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "callback_preference"],
+      "properties": {
+        "case_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "callback_preference": { "enum": ["email", "phone", "none"] }
+      }
+    },
+    "request_human_handoff_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handoff_id",
+        "status",
+        "callback_preference",
+        "card_uri",
+        "provenance"
+      ],
+      "properties": {
+        "handoff_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "status": { "const": "fixture_packet_ready_not_sent" },
+        "callback_preference": { "enum": ["email", "phone", "none"] },
+        "card_uri": { "type": "string", "format": "uri" },
+        "provenance": { "const": "fixture" }
+      }
+    },
+    "stop_monitoring_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["trip_id", "expected_version"],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "expected_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "stop_monitoring_output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "trip_id",
+        "status",
+        "monitoring_authorized",
+        "contract_version",
+        "provenance"
+      ],
+      "properties": {
+        "trip_id": { "$ref": "#/$defs/ulid" },
+        "status": { "const": "closed" },
+        "monitoring_authorized": { "const": false },
+        "contract_version": { "type": "integer", "minimum": 1 },
+        "provenance": { "const": "fixture" }
+      }
+    }
+  }
+}

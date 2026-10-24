@@ -1,43 +1,49 @@
 # AccessHold validation record
 
-Recorded 2026-10-23 on the local vertical-slice branch. Evidence is limited to deterministic source behavior and synthetic fixtures.
+Recorded 2026-10-24. Evidence is limited to local source behavior, synthetic fixtures, CDK synthesis, and an HTTP smoke check. No AWS resources or live provider actions were created.
 
 ## Passing checks
 
 | Check | Result |
 | --- | --- |
-| ESLint + Prettier, including `services/` | Passed |
-| TypeScript strict typecheck | Passed |
-| Unit tests | 40/40 passed: 6 constraint-capture, 12 policy, 8 manual-contract, 5 ReferenceTravel-monitor, 5 fixture-recovery, and 4 handoff/calendar tests |
-| Canonical schema/contract tests | 9/9 passed; schema copy byte-identical |
+| ESLint + Prettier | Passed, including `infra/` and `apps/web/` |
+| TypeScript checks | Passed for the root services, React/Vite dashboard, and CDK project |
+| Unit tests | 59/59 passed |
+| Contract tests | 21/21 passed, including all eight MCP input/output schema pairs |
 | Policy/security tests | 2/2 passed |
+| CDK assertions | 8/8 passed |
+| `cdk synth` | Passed; synthesis only, not deployment |
 | npm audit, moderate and above | No known vulnerabilities |
 | TypeScript build | Passed |
-| Fixture walking path | Draft import, explicit activation, violation/recovery pages, plan approval, one duplicate-safe TEST PROVIDER receipt, synthetic replacement confirmation, duplicate-safe handoff packet and confirmed-calendar intent, completed case timeline, JSON repository reopen, four versions; no monitoring worker running |
-| **Total tests** | **51/51 passed** |
+| React/Vite production build | Passed |
+| **Total tests** | **90/90 passed** |
 
-The manual fixture service validates schema, semantics, registered predicates, traveler scope, and fixture provenance. Tests cover draft correction, optimistic versions, stale approval rejection, known-violation rejection, append-only history, cross-traveler denial, live-document rejection, and reopening through a new file-repository instance. Corrections cannot silently reclassify live input as a fixture.
+`make test-infra` runs the isolated CDK typecheck, eight stack assertions, and local synthesis. Assertions cover required environment parameters, private/logged buckets, CloudFront OAC and TLS/API behaviors, Cognito OAuth client settings, recoverable encrypted DynamoDB/Aurora storage, SES receipt configuration, and ALB TLS. Synthesis emits only the informational CDK notice that 81 feature flags have not been configured; no resource was deployed.
 
-FR-AH-003 now has typed domain capture for traveler-authored wording, hard/preference priority, explicit asset scope, and an explicitly supplied registered predicate. Invalid text, asset bindings, feature/operator/value combinations, and units are rejected; new constraints start `unverified` with no fabricated evidence and can only be appended to a traveler-owned draft at its expected version. The importer creates schema-valid ULIDs and persists captures as immutable contract versions. Unit and canonical-schema tests cover hard and preference examples, deterministic predicate evaluation, invalid captures, schema round-trip, fixture persistence, and denied/stale/post-activation requests. This is a local service slice; the product UI and live production persistence are not implemented by it.
+The HTTP smoke check served the Vite dashboard document and successfully fetched the fixture trip list, trip detail, and evidence through the Vite `/api` proxy (HTTP 200). This confirms local routing and fixture responses, not a full browser, visual, keyboard, or assistive-technology test. No headless browser binary was available in the environment.
 
-The explicitly requested ReferenceTravel fixture pages exercise safe change, hard-constraint violation, recovery, immutable asset/evidence versions, and deterministic re-evaluation. Additional tests cover duplicate and conflicting replays, lower-sequence stale events, equivalent-change attachment, degraded recovery remaining open, a new case after completion, malformed/live-looking evidence, and repository-append failure without phantom history. Duplicate event IDs and the recovery-case index are in-memory; their process-restart durability is not implemented or claimed.
+The manual contract fixture validates schema, semantics, registered predicates, traveler scope, and fixture provenance. Tests cover draft correction, optimistic versions, stale approval rejection, known-violation rejection, append-only history, cross-traveler denial, live-document rejection, and reopening through a new file-repository instance. Constraint capture covers traveler wording, hard/preference priority, asset scope, and deterministic predicates; new constraints start unverified without fabricated evidence.
 
-The new fixture recovery service binds each option to the contract, affected asset/evidence versions, action list, cost, inventory token, terms, and expiry. It offers `no_action` even with no feasible recovery option, rejects stale/changed plans and cross-plan approvals, enforces actor/policy/authentication limits, and records one idempotent `TEST PROVIDER` receipt. Confirmation replay can leave a plan `detected` or mark it `completed`; this is an in-memory outbox and synthetic confirmation only, not a provider request, booking, or calendar update.
+Provider verification questions are redacted, version-bound, hash-bound drafts. Tests require an exact owner approval and unchanged contract before send; ambiguous SES outcomes are not retried automatically. The SES adapter test uses a fake client. The running API composes the fixture adapter, so no actual email was sent.
 
-The workflow fixture builds a traveler-scoped handoff containing the itinerary, constraints, evidence, TEST PROVIDER receipt, and unknowns without sending it. Calendar intent is rejected until recovery is complete and a newer active contract exists; retries and conflicting/stale versions cannot create duplicate writes. Both outboxes are in-memory, and no external handoff or calendar call is claimed.
+The MCP/API tests exercise eight traveler-scoped tools, HTML resource templates, stateless Streamable HTTP transport, fixture authentication, evidence redaction, cross-traveler denial, and explicit fixture-only approval/receipt responses. The UI provides contract review, disruption, recovery approval, and privacy/deletion views. This is not evidence of a real Alexa+ session or production authorization.
 
-The JSON repository uses a mode-0600 temporary file and atomic rename for synthetic local contract data. This proves a normal repository reopen, not crash durability, concurrent-writer safety, or encrypted production storage.
+Trip lifecycle tests cover contract export, correction, monitoring revocation, deletion confirmation, optimistic versions, and paginated S3 object-version/delete-marker cleanup. The S3 deletion adapter was tested against fakes only. Current deletion tasks and retention state are in memory, and the deployed workflow does not yet cover viewer tokens or cached prompts; no live deletion was performed.
+
+The ReferenceTravel fixture pages exercise safe change, hard-constraint violation, recovery, immutable asset/evidence versions, and deterministic re-evaluation. The recovery fixture binds plans to contract/evidence versions, action list, cost, terms, inventory token, and expiry; it rejects stale plans and cross-plan approvals and records only a synthetic `TEST PROVIDER` receipt. The workflow fixture builds a traveler-scoped handoff without sending it and creates calendar intent only after confirmed recovery. It does not place a booking or update an external calendar.
 
 ## Reproduce
 
 ```bash
-make lint typecheck test-unit test-contract test-security build dev
+make lint typecheck
+make test-unit test-contract test-security test-infra
+make build build-web
 ```
 
-Or run all five independent projects from the repository root with `scripts/validate-foundations.sh` after each project has been bootstrapped.
+For a local dashboard smoke path, run `make dev-api` and `make dev-web` in separate shells. These use the local fixture runtime and do not start external services.
 
 ## Not evidenced
 
-No TypeScript coverage percentage is claimed. No live Alexa+/MCP, SES, Bedrock, travel provider, calendar, email import, production database, live external-action idempotency, scheduled/live monitoring worker, independent production replacement-confirmation import, deletion, accessibility participant, performance, deployment, or release behavior was executed. The hotel-room fixture does not satisfy the aircraft/dependent-transfer scenario, and local case completion performs no booking or external calendar update. Integration/E2E/infrastructure/deploy targets remain intentionally blocked.
+No real Alexa+ integration/device, live Cognito sign-in or JWT validation, SES inbound/outbound delivery, Bedrock, travel provider, external calendar, human-handoff channel, production database/migrations, durable queue worker, production idempotency, production deletion, accessibility-participant testing, performance/load test, AWS deployment, rollback/restore, or release evidence was executed. The hotel-room fixture does not satisfy the aircraft/dependent-transfer scenario. The CDK scaffold still requires the prerequisites and work listed in [`infrastructure.md`](./infrastructure.md); fixture success and successful synthesis do not satisfy those release gates.
 
-This record supports only the linked local traceability rows. It does not satisfy the specification's build-complete gate or guarantee physical accessibility.
+No TypeScript coverage percentage is claimed. This record does not satisfy the specification's build-complete gate or guarantee physical accessibility.

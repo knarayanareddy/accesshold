@@ -1,3 +1,9 @@
+export type {
+  ProviderQuestionDraft,
+  ProviderQuestionTemplate,
+  ProviderQuestionTemplateSet,
+} from "./provider-question.js";
+
 export type Provenance = "live" | "fixture";
 export type SourceType =
   | "official_api"

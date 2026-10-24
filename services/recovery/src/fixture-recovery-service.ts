@@ -419,6 +419,17 @@ export class FixtureRecoveryService {
     return clone(this.plan(planHash));
   }
 
+  getReceipt(planHash: string): FixtureActionReceipt | undefined {
+    const receipt = this.receipts.get(planHash);
+    return receipt ? clone(receipt) : undefined;
+  }
+
+  plansForCase(caseId: string, tripId: string): RecoveryPlan[] {
+    return [...this.plans.values()]
+      .filter((plan) => plan.case_id === caseId && plan.trip_id === tripId)
+      .map(clone);
+  }
+
   get receiptCount(): number {
     return this.receipts.size;
   }
