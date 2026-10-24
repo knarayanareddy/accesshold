@@ -28,7 +28,14 @@ import {
 } from "./api.js";
 
 type Screen = "trips" | "contract" | "disruption" | "recovery" | "privacy";
+type DemoMode = "video" | "sandbox";
 type NoticeTone = "info" | "warning" | "success" | "error";
+
+const VIDEO_CHAPTERS = [
+  { title: "1: High Contrast", fallbackStartSeconds: 0 },
+  { title: "2: Delay Notification", fallbackStartSeconds: 4 },
+  { title: "3: Recovery Plan Approval", fallbackStartSeconds: 6.5 },
+] as const;
 type AnnouncementTarget = "general" | "recovery" | "provider-question";
 
 const DIALOG_FOCUSABLE_SELECTOR =
@@ -148,7 +155,15 @@ function StatusBadge({ status }: { status: string }) {
 function Icon({
   name,
 }: {
-  name: "shield" | "document" | "clock" | "link" | "arrow" | "lock";
+  name:
+    | "shield"
+    | "document"
+    | "clock"
+    | "link"
+    | "arrow"
+    | "lock"
+    | "film"
+    | "gamepad";
 }) {
   const paths: Record<typeof name, string> = {
     shield:
@@ -158,6 +173,9 @@ function Icon({
     link: "M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1 M14 11a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1.1-1.1",
     arrow: "M5 12h14 M13 6l6 6-6 6",
     lock: "M6 10h12v11H6z M8 10V7a4 4 0 1 1 8 0v3 M12 14v3",
+    film: "M4 4h16v16H4z M8 4v4 M16 4v4 M8 16v4 M16 16v4 M4 9h16 M4 15h16",
+    gamepad:
+      "M7 9h10a4 4 0 0 1 3.8 5.3l-1.2 3.7a2 2 0 0 1-3.3.8L14 17h-4l-2.3 1.8a2 2 0 0 1-3.3-.8l-1.2-3.7A4 4 0 0 1 7 9z M8 12v4 M6 14h4 M16 13h.01 M18 15h.01",
   };
   return (
     <svg aria-hidden="true" className="icon" viewBox="0 0 24 24" fill="none">
@@ -180,7 +198,148 @@ function ErrorMessage({ message }: { message: string }) {
   );
 }
 
+function VideoWalkthrough() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const chapterTrackRef = useRef<HTMLTrackElement>(null);
+  const chapterStartsRef = useRef<number[]>(
+    VIDEO_CHAPTERS.map((chapter) => chapter.fallbackStartSeconds),
+  );
+  const [activeChapter, setActiveChapter] = useState(0);
+
+  const updateActiveChapter = () => {
+    const currentTime = videoRef.current?.currentTime ?? 0;
+    const nextChapter = VIDEO_CHAPTERS.reduce(
+      (activeIndex, chapter, chapterIndex) =>
+        currentTime >=
+        (chapterStartsRef.current[chapterIndex] ?? chapter.fallbackStartSeconds)
+          ? chapterIndex
+          : activeIndex,
+      0,
+    );
+    setActiveChapter((current) =>
+      current === nextChapter ? current : nextChapter,
+    );
+  };
+
+  const syncChapterTimes = () => {
+    const cues = chapterTrackRef.current?.track.cues;
+    if (!cues || cues.length !== VIDEO_CHAPTERS.length) return;
+    chapterStartsRef.current = Array.from(cues, (cue) => cue.startTime);
+    updateActiveChapter();
+  };
+
+  const jumpToChapter = (chapterIndex: number) => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime =
+      chapterStartsRef.current[chapterIndex] ??
+      VIDEO_CHAPTERS[chapterIndex]!.fallbackStartSeconds;
+    setActiveChapter(chapterIndex);
+  };
+
+  return (
+    <main id="main" className="video-walkthrough-main" tabIndex={-1}>
+      <div className="video-walkthrough-layout">
+        <header className="video-walkthrough-heading">
+          <p className="eyebrow">ACCESSHOLD · FIXTURE WALKTHROUGH</p>
+          <h1>Watch the video walkthrough</h1>
+          <p>
+            Follow a synthetic disruption review, accessibility settings, and
+            traveler-approved recovery. No live itinerary or booking is changed.
+          </p>
+        </header>
+
+        <section
+          className="video-walkthrough-card"
+          aria-labelledby="walkthrough-video-title"
+        >
+          <div className="video-player-shell">
+            <h2 id="walkthrough-video-title" className="sr-only">
+              AccessHold coordinator demo video
+            </h2>
+            <video
+              ref={videoRef}
+              className="walkthrough-video"
+              src="./media/accesshold-demo.webm"
+              controls
+              playsInline
+              preload="metadata"
+              aria-label="AccessHold demo walkthrough with English captions"
+              onLoadedMetadata={syncChapterTimes}
+              onTimeUpdate={updateActiveChapter}
+            >
+              <track
+                kind="captions"
+                src="./media/accesshold-demo.en.vtt"
+                srcLang="en"
+                label="English captions"
+                default
+              />
+              <track
+                ref={chapterTrackRef}
+                kind="chapters"
+                src="./media/accesshold-demo.chapters.vtt"
+                srcLang="en"
+                label="Walkthrough chapters"
+                onLoad={syncChapterTimes}
+                default
+              />
+              Your browser does not support video playback. Read the transcript
+              below instead.
+            </video>
+          </div>
+
+          <nav className="walkthrough-chapters" aria-label="Video chapters">
+            <h2>Video chapters</h2>
+            <ol>
+              {VIDEO_CHAPTERS.map((chapter, index) => (
+                <li key={chapter.title}>
+                  <button
+                    className="walkthrough-chapter-button"
+                    type="button"
+                    aria-current={activeChapter === index ? "true" : undefined}
+                    onClick={() => jumpToChapter(index)}
+                  >
+                    {chapter.title}
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </nav>
+
+          <details className="walkthrough-transcript">
+            <summary>Read the video transcript</summary>
+            <ol>
+              <li>
+                <strong>High Contrast.</strong> The traveler enables High
+                Contrast Mode, which remains on while they review the fixture.
+              </li>
+              <li>
+                <strong>Delay Notification.</strong> The traveler reviews a
+                synthetic TEST PROVIDER disruption notice. This sample shows a
+                room-access detail change; it does not poll a live itinerary.
+              </li>
+              <li>
+                <strong>Recovery Plan Approval.</strong> The traveler compares
+                the listed recovery option and its unknowns, types APPROVE
+                RECOVERY, and records a fixture action. Provider confirmation is
+                still pending.
+              </li>
+            </ol>
+          </details>
+          <p className="walkthrough-fixture-note">
+            This silent, synthetic recording includes descriptive English
+            captions. It is not evidence of a live booking or confirmed
+            accessibility.
+          </p>
+        </section>
+      </div>
+    </main>
+  );
+}
+
 export default function App() {
+  const [demoMode, setDemoMode] = useState<DemoMode>("sandbox");
   const [screen, setScreen] = useState<Screen>("trips");
   const [accessibilityPreferences, setAccessibilityPreferences] =
     useState<AccessibilityPreferences>(loadAccessibilityPreferences);
@@ -718,6 +877,35 @@ export default function App() {
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-context">Travel evidence desk</span>
         </div>
+        <div className="demo-mode-switch" role="group" aria-label="Demo mode">
+          <button
+            className="demo-mode-button"
+            type="button"
+            aria-pressed={demoMode === "video"}
+            onClick={() => setDemoMode("video")}
+          >
+            <span className="sr-only">🎬 </span>
+            <span aria-hidden="true" className="demo-mode-icon">
+              <Icon name="film" />
+            </span>
+            Watch Video Walkthrough
+          </button>
+          <span className="demo-mode-divider" aria-hidden="true">
+            |
+          </span>
+          <button
+            className="demo-mode-button"
+            type="button"
+            aria-pressed={demoMode === "sandbox"}
+            onClick={() => setDemoMode("sandbox")}
+          >
+            <span className="sr-only">🎮 </span>
+            <span aria-hidden="true" className="demo-mode-icon">
+              <Icon name="gamepad" />
+            </span>
+            Live Coordinator Sandbox
+          </button>
+        </div>
         <div className="header-tools">
           <span className="environment-label">
             <span className="environment-dot" /> TEST PROVIDER · LOCAL FIXTURE
@@ -754,10 +942,20 @@ export default function App() {
         </div>
       </header>
 
+      {demoMode === "video" ? (
+        <div
+          className="video-walkthrough-wrapper"
+          aria-hidden={isAccessibilityPreferencesOpen}
+          inert={isAccessibilityPreferencesOpen}
+        >
+          <VideoWalkthrough />
+        </div>
+      ) : null}
       <div
         className="workspace"
-        aria-hidden={isAccessibilityPreferencesOpen}
-        inert={isAccessibilityPreferencesOpen}
+        hidden={demoMode === "video"}
+        aria-hidden={isAccessibilityPreferencesOpen || demoMode === "video"}
+        inert={isAccessibilityPreferencesOpen || demoMode === "video"}
       >
         <aside className="sidebar" aria-label="Workspace sidebar">
           <p className="nav-caption">WORKSPACE</p>
@@ -795,7 +993,11 @@ export default function App() {
           </div>
         </aside>
 
-        <main id="main" className="main-content" tabIndex={-1}>
+        <main
+          id={demoMode === "sandbox" ? "main" : undefined}
+          className="main-content"
+          tabIndex={-1}
+        >
           {error ? <ErrorMessage message={error} /> : null}
           {notice ? (
             <div

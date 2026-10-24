@@ -34,4 +34,4 @@ corepack pnpm exec playwright install chromium
 corepack pnpm record:demo
 ```
 
-`record-demo.ts` records High Contrast Mode, the disruption review, option selection, explicit plan approval, and the fixture receipt that remains **awaiting provider confirmation**. It writes `docs/media/accesshold-demo.webm`; the generated clip is ignored by Git, while `.gitkeep` tracks the output directory. `DEMO_BASE_URL` can override the default local dashboard URL. The recording is synthetic demo media, not evidence of a live booking or confirmed accessibility.
+`record-demo.ts` records High Contrast Mode, the disruption review, option selection, explicit plan approval, and the fixture receipt that remains **awaiting provider confirmation**. It writes `docs/media/accesshold-demo.webm` with synchronized English captions and WebVTT chapter cues. The WebM and VTT files are public Pages assets served from `/accesshold/media/`; `.gitkeep` tracks the output directory. `DEMO_BASE_URL` can override the default local dashboard URL. The recording is synthetic demo media, not evidence of a live booking or confirmed accessibility.
