@@ -51,3 +51,16 @@ For a local dashboard smoke path, run `make dev-api` and `make dev-web` in separ
 No real Alexa+ integration/device, live Cognito sign-in or JWT validation, SES inbound/outbound delivery, Bedrock, travel provider, external calendar, human-handoff channel, production database/migrations, durable queue worker, production idempotency, production deletion, accessibility-participant testing, performance/load test, AWS deployment, rollback/restore, or release evidence was executed. The hotel-room fixture does not satisfy the aircraft/dependent-transfer scenario. The CDK scaffold still requires the prerequisites and work listed in [`infrastructure.md`](./infrastructure.md); fixture success and successful synthesis do not satisfy those release gates.
 
 No TypeScript coverage percentage is claimed. This record does not satisfy the specification's build-complete gate or guarantee physical accessibility.
+
+## Accessibility and demo-seed follow-up — 2026-10-24
+
+| Check | Result |
+| --- | --- |
+| `pnpm typecheck` | Passed for root, web, and infrastructure TypeScript projects |
+| `pnpm lint` | Passed; ESLint and Prettier reported zero warnings/errors |
+| `pnpm test:unit` | 75/75 passed across 15 files, including seed validation/idempotency and contrast calculations |
+| `pnpm test:e2e` | 4/4 passed; `/api/v1` recovery flow, skip-link/landmarks, high-contrast persistence/focus trap, and provider-question announcements |
+| `pnpm build:web` | Passed; Vite production bundle generated |
+| Seed CLI dry run | Passed; schema/registry validation and scenario-only output verified for one simulated flight delay and one gate change |
+
+The specified combined command `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm test:e2e` completed successfully. The contrast test verifies selected text/background component pairs against WCAG 2.1 AA thresholds (4.5:1 for normal-size text); the black/white High Contrast Mode pair is 21:1. E2E exercises keyboard behavior in jsdom, not a real browser or screen reader. No PostgreSQL or DynamoDB seed write was performed because no disposable/live database was configured. Real assistive-technology, 200% zoom, user-participant, and live-database checks remain outstanding.

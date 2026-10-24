@@ -42,6 +42,13 @@ textarea:focus-visible,
 select:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px #ffffff,
+    0 0 0 5px #142b3a;
+}
+.main-content:focus {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
 }
 button:disabled {
   cursor: not-allowed;
@@ -173,6 +180,13 @@ button:disabled {
   font: 600 12px var(--font-mono);
   cursor: pointer;
 }
+.accessibility-button {
+  white-space: nowrap;
+}
+.accessibility-button > span:first-child {
+  font-weight: 800;
+  letter-spacing: -0.08em;
+}
 
 .workspace {
   display: grid;
@@ -235,7 +249,7 @@ button:disabled {
   box-shadow: inset 3px 0 0 var(--primary);
 }
 .nav-number {
-  color: #71838c;
+  color: #4b5d68;
   font: 500 11px var(--font-mono);
 }
 .nav-count {
@@ -300,7 +314,7 @@ button:disabled {
 }
 .eyebrow-separator {
   padding: 0 5px;
-  color: #97a5ac;
+  color: #536873;
 }
 h1,
 h2,
@@ -880,6 +894,9 @@ label {
 .constraint-list {
   display: grid;
   gap: 8px;
+}
+.constraint-list-item {
+  min-width: 0;
 }
 .constraint-row {
   display: grid;
@@ -1535,7 +1552,7 @@ code,
   gap: 4px;
 }
 .option-meta-grid span {
-  color: #677a83;
+  color: #536873;
   font: 600 9px var(--font-mono);
   letter-spacing: 0.03em;
 }
@@ -2058,13 +2075,15 @@ code,
   .brand-divider,
   .brand-context,
   .privacy-button span,
+  .accessibility-button span:last-child,
   .environment-label {
     display: none;
   }
   .header-tools {
     gap: 7px;
   }
-  .privacy-button {
+  .privacy-button,
+  .accessibility-button {
     width: 40px;
     justify-content: center;
     padding: 7px;
@@ -2229,5 +2248,220 @@ code,
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+:root[data-reduced-motion="reduce"] *,
+:root[data-reduced-motion="reduce"] *::before,
+:root[data-reduced-motion="reduce"] *::after {
+  scroll-behavior: auto !important;
+  transition-duration: 0.01ms !important;
+  animation-duration: 0.01ms !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.accessibility-modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(14 31 41 / 72%);
+}
+.accessibility-dialog {
+  width: min(100%, 600px);
+  max-height: min(90vh, 760px);
+  overflow-y: auto;
+  padding: clamp(22px, 4vw, 34px);
+  border: 1px solid #8a9ca4;
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: 0 22px 70px rgb(0 0 0 / 28%);
+}
+.accessibility-dialog-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+}
+.accessibility-dialog-heading h2 {
+  margin: 0 0 8px;
+  font-size: 25px;
+  line-height: 1.2;
+}
+.accessibility-dialog > .muted-copy {
+  margin: 0 0 20px;
+}
+.accessibility-settings {
+  display: grid;
+  gap: 12px;
+}
+.accessibility-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  border: 1px solid #aab8be;
+  border-radius: 6px;
+  background: #f6f8f9;
+  cursor: pointer;
+}
+.accessibility-setting-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.accessibility-setting-copy strong {
+  color: var(--text);
+  font-size: 15px;
+}
+.accessibility-setting-copy > span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.accessibility-setting-row input[type="checkbox"] {
+  appearance: none;
+  position: relative;
+  width: 50px;
+  height: 30px;
+  min-height: 30px;
+  flex: 0 0 50px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #526772;
+  border-radius: 999px;
+  background: #e8eef1;
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.accessibility-setting-row input[type="checkbox"]::before {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #425963;
+  content: "";
+  transition:
+    background-color 120ms ease,
+    transform 120ms ease;
+}
+.accessibility-setting-row input[type="checkbox"]:checked {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+.accessibility-setting-row input[type="checkbox"]:checked::before {
+  background: #ffffff;
+  transform: translateX(20px);
+}
+.accessibility-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+:root[data-contrast="high"] {
+  color-scheme: dark;
+  --canvas: #000000;
+  --surface: #000000;
+  --surface-2: #000000;
+  --text: #ffffff;
+  --muted: #ffffff;
+  --line: #ffffff;
+  --primary: #ffff00;
+  --on-primary: #000000;
+  --accent: #ffff00;
+  --on-accent: #000000;
+  --success: #ffff00;
+  --warning: #ffff00;
+  --danger: #ffff00;
+  --info: #ffff00;
+  --focus: #ffff00;
+}
+:root[data-contrast="high"] :where(*) {
+  color: #ffffff !important;
+  background-color: #000000 !important;
+  border-color: #ffffff !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+:root[data-contrast="high"] button:focus-visible,
+:root[data-contrast="high"] a:focus-visible,
+:root[data-contrast="high"] input:focus-visible,
+:root[data-contrast="high"] textarea:focus-visible,
+:root[data-contrast="high"] select:focus-visible,
+:root[data-contrast="high"] .main-content:focus {
+  outline: 3px solid #ffff00 !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px #000000 !important;
+}
+:root[data-contrast="high"]
+  .accessibility-setting-row
+  input[type="checkbox"]::before {
+  background: #ffffff !important;
+}
+:root[data-contrast="high"] a:not(.skip-link) {
+  text-decoration: underline !important;
+  text-underline-offset: 0.15em;
+}
+:root[data-contrast="high"] ::placeholder {
+  color: #ffffff !important;
+  opacity: 1;
+}
+:root[data-contrast="high"] ::selection {
+  color: #000000;
+  background: #ffff00;
+}
+
+@media (max-width: 650px) {
+  .accessibility-modal-backdrop {
+    align-items: end;
+    padding: 12px;
+  }
+  .accessibility-dialog {
+    max-height: 92vh;
+    padding: 20px 16px;
+  }
+  .accessibility-setting-row {
+    gap: 12px;
+    padding: 13px;
+  }
+  .accessibility-setting-copy > span {
+    max-width: 30ch;
+  }
+  .accessibility-dialog-actions .button {
+    width: 100%;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible,
+  .main-content:focus {
+    outline: 3px solid Highlight !important;
+    outline-offset: 3px !important;
+    box-shadow: none !important;
+  }
+  .accessibility-modal-backdrop {
+    background: Canvas;
+  }
+  .accessibility-dialog {
+    border: 2px solid CanvasText;
+    box-shadow: none;
   }
 }

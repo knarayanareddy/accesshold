@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 PNPM := corepack pnpm
 
-.PHONY: bootstrap setup dev dev-api dev-web lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web migrate-postgres deploy evidence
+.PHONY: bootstrap setup dev dev-api dev-web lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web migrate-postgres seed-traveler-data deploy evidence
 
 bootstrap:
 	corepack pnpm --version
@@ -43,6 +43,9 @@ build-web:
 
 migrate-postgres:
 	$(PNPM) migrate:postgres
+
+seed-traveler-data:
+	$(PNPM) seed:traveler-data
 
 test-integration:
 	$(PNPM) test:integration
