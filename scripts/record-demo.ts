@@ -65,46 +65,57 @@ try {
     .getByRole("heading", { name: "Trips and change queue" })
     .waitFor({ state: "visible" });
 
+  // 0s to 66s: Overview of Trips and Change Queue during Introduction
+  await page.waitForTimeout(66_000);
+
+  // 66s to 84s: High Contrast Mode demonstration (WCAG 2.1 AA)
   await page.getByRole("button", { name: "Accessibility preferences" }).click();
+  await page.waitForTimeout(2_000);
   await page.getByRole("switch", { name: "High contrast mode" }).check();
   await page.waitForFunction(
     () => document.documentElement.dataset.contrast === "high",
   );
-  await page.waitForTimeout(22_000);
+  await page.waitForTimeout(7_000);
   await page
     .getByRole("button", { name: "Close accessibility preferences" })
     .click();
+  await page.waitForTimeout(7_000);
 
+  // 84s to 102s: Disruption notice review
   timeline.delayNotification = elapsedSeconds();
   await page.getByRole("button", { name: /Review disruption/ }).click();
   await page
     .getByRole("heading", { name: "A room detail needs review" })
     .waitFor({ state: "visible" });
-  await page.waitForTimeout(24_000);
+  await page.waitForTimeout(17_000);
+
+  // 102s to 123s: Vetted recovery options & explicit approval gate
   await page.getByRole("button", { name: /Review recovery options/ }).click();
   await page
     .getByRole("heading", { name: "Review recovery options" })
     .waitFor({ state: "visible" });
   timeline.recoveryPlan = elapsedSeconds();
-  await page.waitForTimeout(20_000);
+  await page.waitForTimeout(4_000);
   await page.getByRole("radio").first().check();
-  await page.waitForTimeout(8_000);
+  await page.waitForTimeout(3_000);
   await page.getByRole("button", { name: /Review selected recovery/ }).click();
   await page.getByText("Pending your approval").waitFor({ state: "visible" });
-  await page.waitForTimeout(10_000);
+  await page.waitForTimeout(3_000);
   await page.getByLabel(/Type APPROVE RECOVERY/).fill("APPROVE RECOVERY");
-  await page.waitForTimeout(14_000);
+  await page.waitForTimeout(9_000);
+
+  // 123s to 142s: Approval recorded, ledger entry, and fixture execution
   await page.getByRole("button", { name: "Approve exact plan" }).click();
   await page.getByText("Approval recorded").waitFor({ state: "visible" });
   timeline.approvalRecorded = elapsedSeconds();
-  await page.waitForTimeout(15_000);
+  await page.waitForTimeout(5_000);
 
   await page.getByRole("button", { name: "Execute fixture action" }).click();
   await page
     .getByText("Waiting for provider confirmation")
     .waitFor({ state: "visible" });
   timeline.fixtureAction = elapsedSeconds();
-  await page.waitForTimeout(15_000);
+  await page.waitForTimeout(14_000);
   recordedDuration = elapsedSeconds();
 
   await page.close();
@@ -135,7 +146,6 @@ if (existsSync(narrationPath)) {
     "libopus",
     "-b:a",
     "128k",
-    "-shortest",
     tempMux,
   ]);
   if (muxRes.status === 0 && existsSync(tempMux)) {
