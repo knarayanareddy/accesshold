@@ -214,7 +214,9 @@ export async function buildApiServer(
   app.get("/api/v1/trips", async (request) => {
     const actor = travelerId(request);
     const trips = [];
-    for (const document of await runtime.repository.listCurrent()) {
+    for (const document of await runtime.repository.listCurrentForTraveler(
+      actor,
+    )) {
       if (document.traveler_id !== actor) continue;
       const view = await runtime.contracts.getTrip(
         document.trip.trip_id,

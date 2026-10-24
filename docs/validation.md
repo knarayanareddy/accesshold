@@ -8,19 +8,23 @@ Recorded 2026-10-24. Evidence is limited to local source behavior, synthetic fix
 | --- | --- |
 | ESLint + Prettier | Passed, including `infra/` and `apps/web/` |
 | TypeScript checks | Passed for the root services, React/Vite dashboard, and CDK project |
-| Unit tests | 59/59 passed |
+| Unit tests | 71/71 passed |
 | Contract tests | 21/21 passed, including all eight MCP input/output schema pairs |
 | Policy/security tests | 2/2 passed |
+| Dashboard-to-Fastify smoke | 1/1 passed against the preserved `/api/v1` contract |
+| Optional PostgreSQL integration | 1 skipped; `ACCESSHOLD_TEST_DATABASE_URL` was unset |
 | CDK assertions | 8/8 passed |
 | `cdk synth` | Passed; synthesis only, not deployment |
 | npm audit, moderate and above | No known vulnerabilities |
 | TypeScript build | Passed |
 | React/Vite production build | Passed |
-| **Total tests** | **90/90 passed** |
+| **Total executed tests** | **103/103 passed; 1 optional PostgreSQL test skipped** |
 
 `make test-infra` runs the isolated CDK typecheck, eight stack assertions, and local synthesis. Assertions cover required environment parameters, private/logged buckets, CloudFront OAC and TLS/API behaviors, Cognito OAuth client settings, recoverable encrypted DynamoDB/Aurora storage, SES receipt configuration, and ALB TLS. Synthesis emits only the informational CDK notice that 81 feature flags have not been configured; no resource was deployed.
 
-The HTTP smoke check served the Vite dashboard document and successfully fetched the fixture trip list, trip detail, and evidence through the Vite `/api` proxy (HTTP 200). This confirms local routing and fixture responses, not a full browser, visual, keyboard, or assistive-technology test. No headless browser binary was available in the environment.
+SES tests cover raw MIME sanitization, direct S3 events, SQS batches carrying S3 or SNS notifications, authorization, manual-review routing, and draft-only import. The confirmation pipeline tests schema validation, traveler-profile constraints, unverified evidence, and duplicate delivery after a contract's status changes. Fake-client repository tests cover PostgreSQL history/optimistic append/deletion and DynamoDB history/traveler listing/tombstone deletion; the optional PostgreSQL integration test was skipped.
+
+The earlier HTTP smoke check served the Vite dashboard document and fetched the fixture trip list, trip detail, and evidence through the Vite `/api` proxy using the `/api/v1` API routes (HTTP 200). This confirms local routing and fixture responses, not a full browser, visual, keyboard, or assistive-technology test. No headless browser binary was available in the environment.
 
 The manual contract fixture validates schema, semantics, registered predicates, traveler scope, and fixture provenance. Tests cover draft correction, optimistic versions, stale approval rejection, known-violation rejection, append-only history, cross-traveler denial, live-document rejection, and reopening through a new file-repository instance. Constraint capture covers traveler wording, hard/preference priority, asset scope, and deterministic predicates; new constraints start unverified without fabricated evidence.
 
@@ -36,7 +40,7 @@ The ReferenceTravel fixture pages exercise safe change, hard-constraint violatio
 
 ```bash
 make lint typecheck
-make test-unit test-contract test-security test-infra
+make test-unit test-contract test-integration test-e2e test-security test-infra
 make build build-web
 ```
 

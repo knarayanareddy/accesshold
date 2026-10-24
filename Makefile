@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 PNPM := corepack pnpm
 
-.PHONY: bootstrap setup dev dev-api dev-web lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web deploy evidence
+.PHONY: bootstrap setup dev dev-api dev-web lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web migrate-postgres deploy evidence
 
 bootstrap:
 	corepack pnpm --version
@@ -41,13 +41,14 @@ build:
 build-web:
 	$(PNPM) build:web
 
+migrate-postgres:
+	$(PNPM) migrate:postgres
+
 test-integration:
-	@echo "BLOCKED: PostgreSQL/SES/reference-provider integration harness is not implemented." >&2
-	@exit 1
+	$(PNPM) test:integration
 
 test-e2e:
-	@echo "BLOCKED: web and real Alexa+/MCP E2E harness is not implemented." >&2
-	@exit 1
+	$(PNPM) test:e2e
 
 test-infra:
 	$(PNPM) typecheck:infra

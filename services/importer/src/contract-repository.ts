@@ -3,11 +3,12 @@ import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import type { AccessContractDocument } from "../../../packages/contracts/src/index.js";
 
-/** Single-writer repository boundary. The file implementation is fixture-only. */
+/** Versioned contract repository boundary; the in-memory and file implementations are fixture-only. */
 export interface ContractRepository {
   current(tripId: string): Promise<AccessContractDocument | undefined>;
   versions(tripId: string): Promise<AccessContractDocument[]>;
   listCurrent(): Promise<AccessContractDocument[]>;
+  listCurrentForTraveler(travelerId: string): Promise<AccessContractDocument[]>;
   append(
     document: AccessContractDocument,
     expectedVersion: number | null,
@@ -48,6 +49,14 @@ export class InMemoryContractRepository implements ContractRepository {
 
   async listCurrent(): Promise<AccessContractDocument[]> {
     return [...latestVersions(this.documents).values()].map(clone);
+  }
+
+  async listCurrentForTraveler(
+    travelerId: string,
+  ): Promise<AccessContractDocument[]> {
+    return [...latestVersions(this.documents).values()]
+      .filter((document) => document.traveler_id === travelerId)
+      .map(clone);
   }
 
   async append(
@@ -168,6 +177,14 @@ export class JsonFileFixtureContractRepository implements ContractRepository {
 
   async listCurrent(): Promise<AccessContractDocument[]> {
     return [...latestVersions(await this.readAll()).values()].map(clone);
+  }
+
+  async listCurrentForTraveler(
+    travelerId: string,
+  ): Promise<AccessContractDocument[]> {
+    return [...latestVersions(await this.readAll()).values()]
+      .filter((document) => document.traveler_id === travelerId)
+      .map(clone);
   }
 
   async append(
