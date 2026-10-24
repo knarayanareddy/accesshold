@@ -1,0 +1,10 @@
+{
+  "app": "../node_modules/.bin/tsx bin/accesshold.ts",
+  "context": {
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/core:target-partitions": ["aws", "aws-us-gov"],
+    "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": true,
+    "@aws-cdk/aws-lambda:recognizeVersionProps": true,
+    "@aws-cdk/aws-events:eventsTargetQueueSameAccount": true
+  }
+}

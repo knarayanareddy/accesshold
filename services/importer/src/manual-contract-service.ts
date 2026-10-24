@@ -29,6 +29,14 @@ export interface ContractView {
   provenance: "fixture";
 }
 
+export interface TripContractExport {
+  export_version: 1;
+  trip_id: string;
+  exported_at: string;
+  provenance: "fixture";
+  contract_versions: AccessContractDocument[];
+}
+
 const ULID_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 
 type ConstraintIdFactory = (at: Date) => string;
@@ -260,5 +268,46 @@ export class ManualContractService {
   ): Promise<AccessContractDocument[]> {
     await this.current(tripId, actorTravelerId);
     return this.repository.versions(tripId);
+  }
+
+  async exportTrip(
+    tripId: string,
+    actorTravelerId: string,
+  ): Promise<TripContractExport> {
+    const current = await this.current(tripId, actorTravelerId);
+    const exportedAt = this.clock();
+    if (!Number.isFinite(exportedAt.getTime()))
+      throw new Error("invalid_contract_export_clock");
+    return {
+      export_version: 1,
+      trip_id: current.trip.trip_id,
+      exported_at: exportedAt.toISOString(),
+      provenance: "fixture",
+      contract_versions: await this.repository.versions(tripId),
+    };
+  }
+
+  async revokeMonitoring(input: {
+    tripId: string;
+    actorTravelerId: string;
+    expectedVersion: number;
+  }): Promise<ContractView> {
+    const current = await this.current(input.tripId, input.actorTravelerId);
+    if (current.version !== input.expectedVersion)
+      throw new Error("optimistic_version_conflict");
+    if (current.status === "closed") return this.view(current);
+    if (current.status === "draft") throw new Error("monitoring_not_active");
+    const now = this.clock();
+    if (!Number.isFinite(now.getTime()))
+      throw new Error("invalid_monitoring_revocation_clock");
+    const revoked: AccessContractDocument = {
+      ...structuredClone(current),
+      status: "closed",
+      version: current.version + 1,
+      updated_at: now.toISOString(),
+    };
+    this.validate(revoked);
+    await this.repository.append(revoked, current.version);
+    return this.view(revoked);
   }
 }

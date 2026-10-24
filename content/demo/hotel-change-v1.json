@@ -1,0 +1,33 @@
+{
+  "external_id": "fixture-room-configuration-change-001",
+  "trip_id": "01000000000000000000000003",
+  "asset_id": "01000000000000000000000004",
+  "sequence": 1,
+  "asset": {
+    "asset_id": "01000000000000000000000004",
+    "kind": "hotel_room",
+    "provider": "Fixture Hotel Provider",
+    "provider_reference": "TEST-CONF-001",
+    "starts_at": "2026-11-01T14:00:00.000Z",
+    "ends_at": "2026-11-04T10:00:00.000Z",
+    "attributes": [
+      { "key": "hotel.room.roll_in_shower", "value": false },
+      { "key": "hotel.room.door_width", "value": 86, "unit": "cm" }
+    ]
+  },
+  "evidence": {
+    "evidence_id": "01000000000000000000000006",
+    "asset_id": "01000000000000000000000004",
+    "source_type": "fixture",
+    "verification_level": "unverified",
+    "features": [
+      { "key": "hotel.room.roll_in_shower", "value": false },
+      { "key": "hotel.room.door_width", "value": 86, "unit": "cm" }
+    ],
+    "source_uri": "https://provider.example.test/confirmations/TEST-CONF-001/change",
+    "content_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "observed_at": "2026-10-24T09:45:00.000Z",
+    "expires_at": "2026-11-01T12:00:00.000Z",
+    "provenance": "fixture"
+  }
+}
