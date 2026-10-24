@@ -1,79 +1,21 @@
-import { createHash } from "node:crypto";
 import {
   SESv2Client,
   SendEmailCommand,
   type SendEmailCommandOutput,
 } from "@aws-sdk/client-sesv2";
 import type { ProviderQuestionDraft } from "../../../contracts/src/provider-question.js";
+import type {
+  ProviderQuestionMailAdapter,
+  ProviderQuestionMessage,
+  ProviderQuestionReceipt,
+} from "./types.js";
 
-export interface ProviderQuestionMessage {
-  request_id: string;
-  recipient: string;
-  subject: string;
-  text_body: string;
-}
-
-export interface ProviderQuestionReceipt {
-  request_id: string;
-  message_id: string;
-  accepted_at: string;
-  status: "test_message_recorded" | "ses_accepted";
-  provider: "TEST PROVIDER" | "Amazon SES";
-  live_send: boolean;
-  provider_confirmation_received: false;
-}
-
-export interface ProviderQuestionMailAdapter {
-  sendQuestion(
-    message: ProviderQuestionMessage,
-  ): Promise<ProviderQuestionReceipt>;
-}
-
-function digest(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-/** A local-only outbound adapter. It records, but never sends, email. */
-export class FixtureProviderQuestionAdapter
-  implements ProviderQuestionMailAdapter
-{
-  private readonly receipts = new Map<string, ProviderQuestionReceipt>();
-
-  constructor(private readonly clock: () => Date = () => new Date()) {}
-
-  async sendQuestion(
-    message: ProviderQuestionMessage,
-  ): Promise<ProviderQuestionReceipt> {
-    const existing = this.receipts.get(message.request_id);
-    if (existing) return structuredClone(existing);
-    if (
-      !message.request_id.trim() ||
-      !message.recipient.trim() ||
-      !message.subject.trim() ||
-      !message.text_body.trim()
-    ) {
-      throw new Error("invalid_fixture_provider_question");
-    }
-    const now = this.clock();
-    if (!Number.isFinite(now.getTime()))
-      throw new Error("invalid_fixture_mail_clock");
-    const receipt: ProviderQuestionReceipt = {
-      request_id: message.request_id,
-      message_id: `TEST-${digest(JSON.stringify(message)).slice(0, 20).toUpperCase()}`,
-      accepted_at: now.toISOString(),
-      status: "test_message_recorded",
-      provider: "TEST PROVIDER",
-      live_send: false,
-      provider_confirmation_received: false,
-    };
-    this.receipts.set(message.request_id, receipt);
-    return structuredClone(receipt);
-  }
-
-  get receiptCount(): number {
-    return this.receipts.size;
-  }
-}
+export type {
+  ProviderQuestionMailAdapter,
+  ProviderQuestionMessage,
+  ProviderQuestionReceipt,
+} from "./types.js";
+export { FixtureProviderQuestionAdapter } from "./fixture-provider-question-adapter.js";
 
 export interface SesProviderQuestionAdapterOptions {
   fromAddress: string;

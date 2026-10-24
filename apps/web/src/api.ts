@@ -89,6 +89,24 @@ export async function apiRequest<T>(
   if (options.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  if (import.meta.env.VITE_SANDBOX === "true") {
+    const { sandboxApiRequest } = await import("./sandbox-api.js");
+    try {
+      return await sandboxApiRequest<T>(path, { ...options, headers });
+    } catch (cause) {
+      const status =
+        typeof cause === "object" &&
+        cause !== null &&
+        "statusCode" in cause &&
+        typeof cause.statusCode === "number"
+          ? cause.statusCode
+          : 500;
+      throw new ApiError(
+        cause instanceof Error ? cause.message : "request_failed",
+        status,
+      );
+    }
+  }
   const response = await fetch(path, {
     ...options,
     headers,

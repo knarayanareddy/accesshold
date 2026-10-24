@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type {
   AccessContractDocument,
   ProviderQuestionDraft,
@@ -82,7 +81,8 @@ export class ProviderQuestionService {
     private readonly adapter: ProviderQuestionMailAdapter,
     private readonly templates: ProviderQuestionTemplateSet,
     private readonly clock: () => Date = () => new Date(),
-    private readonly requestIdFactory: () => string = randomUUID,
+    private readonly requestIdFactory: () => string = () =>
+      globalThis.crypto.randomUUID(),
   ) {}
 
   async draftRequest(

@@ -1,0 +1,13 @@
+.git
+node_modules
+**/node_modules
+dist
+build
+coverage
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+docs/media/*.webm
+**/cdk.out

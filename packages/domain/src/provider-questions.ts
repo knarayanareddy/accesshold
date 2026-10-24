@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { sha256Hex } from "./hash.js";
 import type { AccessContractDocument } from "../../contracts/src/index.js";
 import type {
   ProviderQuestionDraft,
@@ -34,7 +34,7 @@ function isEmailAddress(value: string): boolean {
 }
 
 function fingerprint(value: unknown): string {
-  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+  return sha256Hex(JSON.stringify(value));
 }
 
 /** Builds a deterministic, provider-facing question without sending it. */

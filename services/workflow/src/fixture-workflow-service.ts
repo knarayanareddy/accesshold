@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import type { AccessContractDocument } from "../../../packages/contracts/src/index.js";
+import { sha256Hex } from "../../../packages/domain/src/hash.js";
 import type {
   FixtureActionReceipt,
   RecoveryPlan,
@@ -62,7 +62,7 @@ function canonicalize(value: unknown): string {
 }
 
 function fingerprint(value: unknown): string {
-  return createHash("sha256").update(canonicalize(value)).digest("hex");
+  return sha256Hex(canonicalize(value));
 }
 
 function clone<T>(value: T): T {

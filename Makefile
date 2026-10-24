@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 PNPM := corepack pnpm
 
-.PHONY: bootstrap setup dev dev-api dev-web lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web migrate-postgres seed-traveler-data deploy evidence
+.PHONY: bootstrap setup dev dev-api dev-web compose-up compose-down test-compose record-demo lint typecheck test-unit test-contract test-integration test-e2e test-infra test-security synth-infra build build-web migrate-postgres seed-traveler-data deploy evidence
 
 bootstrap:
 	corepack pnpm --version
@@ -19,6 +19,18 @@ dev-api:
 
 dev-web:
 	$(PNPM) dev:web
+
+compose-up:
+	docker compose up --build
+
+compose-down:
+	docker compose down
+
+test-compose:
+	$(PNPM) test:compose
+
+record-demo:
+	$(PNPM) record:demo
 
 lint:
 	$(PNPM) lint
