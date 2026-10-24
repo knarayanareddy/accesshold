@@ -348,6 +348,15 @@ export class AccessHoldStack extends Stack {
       timeToLiveAttribute: "expiresAt",
       removalPolicy: RemovalPolicy.RETAIN,
     });
+    workflowTable.addGlobalSecondaryIndex({
+      indexName: "TravelerContractsIndex",
+      partitionKey: {
+        name: "gsi1pk",
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: { name: "gsi1sk", type: dynamodb.AttributeType.STRING },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
     const idempotencyTable = new dynamodb.Table(this, "IdempotencyTable", {
       partitionKey: {
         name: "idempotencyKey",
@@ -604,6 +613,7 @@ function handler(event) {
         DATABASE_HOST: cluster.clusterEndpoint.hostname,
         DATABASE_PORT: cluster.clusterEndpoint.port.toString(),
         DATABASE_NAME: "accesshold",
+        CONTRACT_REPOSITORY_DRIVER: "postgres",
         IMPORTS_BUCKET: importsBucket.bucketName,
         EVIDENCE_BUCKET: evidenceBucket.bucketName,
         EXPORTS_BUCKET: exportsBucket.bucketName,
@@ -689,6 +699,7 @@ function handler(event) {
         DATABASE_HOST: cluster.clusterEndpoint.hostname,
         DATABASE_PORT: cluster.clusterEndpoint.port.toString(),
         DATABASE_NAME: "accesshold",
+        CONTRACT_REPOSITORY_DRIVER: "postgres",
         AWS_REGION: this.region,
       },
       secrets: {

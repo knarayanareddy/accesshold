@@ -151,6 +151,18 @@ describe("AccessHold CDK stack", () => {
     const template = createTemplate();
 
     template.resourceCountIs("AWS::DynamoDB::Table", 2);
+    template.hasResourceProperties("AWS::DynamoDB::Table", {
+      GlobalSecondaryIndexes: Match.arrayWith([
+        Match.objectLike({
+          IndexName: "TravelerContractsIndex",
+          KeySchema: Match.arrayWith([
+            { AttributeName: "gsi1pk", KeyType: "HASH" },
+            { AttributeName: "gsi1sk", KeyType: "RANGE" },
+          ]),
+          Projection: { ProjectionType: "ALL" },
+        }),
+      ]),
+    });
     const tables = Object.values(
       template.findResources("AWS::DynamoDB::Table"),
     ) as Array<{ Properties?: Record<string, unknown> }>;
