@@ -23,6 +23,26 @@
       "question": "Can you confirm whether the mobility device documented on this booking is accepted for this itinerary, including any applicable size or handling conditions?"
     },
     {
+      "feature": "flight.mobility_device.battery_capacity_limit_wh",
+      "label": "Mobility-device battery capacity limit",
+      "question": "What is the maximum allowed battery capacity limit in Watt-hours for mobility devices on this flight, and what handling rules apply?"
+    },
+    {
+      "feature": "flight.mobility_device.lithium_ion_battery_accepted",
+      "label": "Lithium-ion battery acceptance",
+      "question": "Can you confirm whether lithium-ion batteries powering mobility devices are accepted for this flight under applicable dangerous goods rules?"
+    },
+    {
+      "feature": "flight.mobility_device.manual_wheelchair_stowage",
+      "label": "Manual wheelchair cabin stowage",
+      "question": "Does this aircraft have a designated in-cabin stowage space for at least one adult-sized collapsible manual wheelchair?"
+    },
+    {
+      "feature": "flight.boarding.step_free",
+      "label": "Step-free flight boarding",
+      "question": "Is boarding and deplaning for this flight step-free via jet bridge, ambulift, or ramp access?"
+    },
+    {
       "feature": "hotel.room.roll_in_shower",
       "label": "Roll-in shower",
       "question": "Does the booked room have a roll-in shower? Please describe the shower entry and confirm any threshold or lip details you can verify."
