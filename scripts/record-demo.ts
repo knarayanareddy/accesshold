@@ -1,4 +1,6 @@
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
@@ -68,7 +70,7 @@ try {
   await page.waitForFunction(
     () => document.documentElement.dataset.contrast === "high",
   );
-  await page.waitForTimeout(2_500);
+  await page.waitForTimeout(6_500);
   await page
     .getByRole("button", { name: "Close accessibility preferences" })
     .click();
@@ -78,29 +80,31 @@ try {
   await page
     .getByRole("heading", { name: "A room detail needs review" })
     .waitFor({ state: "visible" });
-  await page.waitForTimeout(2_500);
+  await page.waitForTimeout(8_000);
   await page.getByRole("button", { name: /Review recovery options/ }).click();
   await page
     .getByRole("heading", { name: "Review recovery options" })
     .waitFor({ state: "visible" });
   timeline.recoveryPlan = elapsedSeconds();
-  await page.waitForTimeout(1_500);
+  await page.waitForTimeout(6_000);
   await page.getByRole("radio").first().check();
+  await page.waitForTimeout(4_000);
   await page.getByRole("button", { name: /Review selected recovery/ }).click();
   await page.getByText("Pending your approval").waitFor({ state: "visible" });
-  await page.waitForTimeout(1_500);
+  await page.waitForTimeout(4_000);
   await page.getByLabel(/Type APPROVE RECOVERY/).fill("APPROVE RECOVERY");
+  await page.waitForTimeout(3_000);
   await page.getByRole("button", { name: "Approve exact plan" }).click();
   await page.getByText("Approval recorded").waitFor({ state: "visible" });
   timeline.approvalRecorded = elapsedSeconds();
-  await page.waitForTimeout(1_500);
+  await page.waitForTimeout(6_000);
 
   await page.getByRole("button", { name: "Execute fixture action" }).click();
   await page
     .getByText("Waiting for provider confirmation")
     .waitFor({ state: "visible" });
   timeline.fixtureAction = elapsedSeconds();
-  await page.waitForTimeout(2_500);
+  await page.waitForTimeout(7_500);
   recordedDuration = elapsedSeconds();
 
   await page.close();
@@ -115,6 +119,43 @@ if (!recordedPath || recordedDuration === undefined) {
 }
 await rm(outputPath, { force: true });
 await rename(recordedPath, outputPath);
+
+const narrationPath = resolve(mediaDirectory, "accesshold-narration.mp3");
+if (existsSync(narrationPath)) {
+  const tempMux = `${outputPath}.mux.webm`;
+  const muxRes = spawnSync("ffmpeg", [
+    "-y",
+    "-i",
+    outputPath,
+    "-i",
+    narrationPath,
+    "-c:v",
+    "copy",
+    "-c:a",
+    "libopus",
+    "-b:a",
+    "128k",
+    "-shortest",
+    tempMux,
+  ]);
+  if (muxRes.status === 0 && existsSync(tempMux)) {
+    await rename(tempMux, outputPath);
+  }
+}
+spawnSync("ffmpeg", [
+  "-y",
+  "-i",
+  outputPath,
+  "-c:v",
+  "libx264",
+  "-pix_fmt",
+  "yuv420p",
+  "-c:a",
+  "aac",
+  "-b:a",
+  "128k",
+  outputPath.replace(/\.webm$/, ".mp4"),
+]);
 
 const delayStart = Math.max(1, timeline.delayNotification ?? 5);
 const recoveryStart = Math.max(
