@@ -199,10 +199,9 @@ describe("coordinator dashboard + Fastify /api/v1 smoke flow", () => {
     const preferencesButton = screen.getByRole("button", {
       name: "Accessibility preferences",
     });
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
+    for (let tabCount = 0; tabCount < 6; tabCount += 1) {
+      await user.tab();
+    }
     expect(document.activeElement).toBe(preferencesButton);
     await user.keyboard("{Enter}");
 
@@ -312,5 +311,44 @@ describe("coordinator dashboard + Fastify /api/v1 smoke flow", () => {
           .textContent,
       ).toContain("no provider confirmation has been received");
     });
+  });
+
+  it("switches between the video walkthrough and live coordinator sandbox", async () => {
+    const user = userEvent.setup();
+    render(createElement(App));
+    await screen.findByRole("heading", { name: "Trips and change queue" });
+
+    await user.click(
+      screen.getByRole("button", { name: /Watch Video Walkthrough/ }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "Watch the video walkthrough" }),
+    ).toBeTruthy();
+    const video = screen.getByLabelText(
+      "AccessHold demo walkthrough with English captions",
+    );
+    expect(video.getAttribute("src")).toBe("./media/accesshold-demo.webm");
+    expect(
+      video.querySelector('track[kind="captions"]')?.getAttribute("src"),
+    ).toBe("./media/accesshold-demo.en.vtt");
+    expect(
+      video.querySelector('track[kind="chapters"]')?.getAttribute("src"),
+    ).toBe("./media/accesshold-demo.chapters.vtt");
+    expect(
+      screen.getByRole("button", { name: "1: High Contrast" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "2: Delay Notification" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "3: Recovery Plan Approval" }),
+    ).toBeTruthy();
+
+    await user.click(
+      screen.getByRole("button", { name: /Live Coordinator Sandbox/ }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Trips and change queue" }),
+    ).toBeTruthy();
   });
 });

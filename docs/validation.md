@@ -61,9 +61,9 @@ No TypeScript coverage percentage is claimed. This record does not satisfy the s
 | `VITE_SANDBOX=true corepack pnpm build:web` | Passed; `/accesshold/` static build includes the separate in-memory `sandbox-api` chunk |
 | Local Vite route smoke | Passed; `/accesshold/` and `/accesshold/src/main.tsx` returned HTTP 200 |
 | `corepack pnpm test:compose` | Blocked before launch: Docker CLI is absent, so no Compose stack started |
-| `corepack pnpm record:demo` | Not recorded: Playwright reports its Chromium headless-shell executable is not installed; `docs/media/accesshold-demo.webm` is not generated in this environment |
+| `corepack pnpm record:demo` | Initially blocked by the missing Chromium browser; resolved for this run using temporary Chromium and FFmpeg packages outside the repository. Generated `docs/media/accesshold-demo.webm` and synchronized English caption/chapter VTTs |
 
-The Compose launch check and CI workflow are implemented, but no container health or migration run is claimed. The Playwright recorder is typechecked and follows the requested high-contrast, disruption-review, plan-approval and fixture-execution path; an installed Chromium plus a running local stack are required to produce the WebM. GitHub Pages deployment was not run from this workspace. These demos stay fixture-only and do not change the live-integration and release-gate status above.
+The Compose launch check and CI workflow are implemented, but no container health or migration run is claimed. The initial no-Chromium recording failure was resolved for this run with temporary npm browser/FFmpeg tooling stored outside the repository; the recorder produced the WebM and matching VTT tracks from the fixture flow. GitHub Pages deployment was not run from this workspace. These demos stay fixture-only and do not change the live-integration and release-gate status above.
 
 ## Accessibility and demo-seed follow-up — 2026-10-24
 
@@ -77,3 +77,15 @@ The Compose launch check and CI workflow are implemented, but no container healt
 | Seed CLI dry run | Passed; schema/registry validation and scenario-only output verified for one simulated flight delay and one gate change |
 
 The specified combined command `pnpm typecheck && pnpm lint && pnpm test:unit && pnpm test:e2e` completed successfully. The contrast test verifies selected text/background component pairs against WCAG 2.1 AA thresholds (4.5:1 for normal-size text); the black/white High Contrast Mode pair is 21:1. E2E exercises keyboard behavior in jsdom, not a real browser or screen reader. No PostgreSQL or DynamoDB seed write was performed because no disposable/live database was configured. Real assistive-technology, 200% zoom, user-participant, and live-database checks remain outstanding.
+
+## Video walkthrough follow-up — 2026-10-24
+
+| Check | Result |
+| --- | --- |
+| `corepack pnpm --filter @accesshold/web build` | Passed; the dashboard built and copied the walkthrough assets under `dist/web/media/` |
+| `VITE_SANDBOX=true corepack pnpm build:web` | Passed; static sandbox build contains the in-memory API adapter and video/caption/chapter assets |
+| Built media artifacts | Verified WebM, English captions VTT, and chapters VTT exist under `dist/web/media/`; other `docs/` files are not copied into the site root |
+| `corepack pnpm typecheck && corepack pnpm lint && corepack pnpm test:unit && corepack pnpm test:e2e` | Passed; ESLint/Prettier clean, 79/79 unit tests across 17 files, and 5/5 E2E tests |
+| Real-browser walkthrough smoke | Passed with temporary Playwright Chromium; the `/accesshold/media/` WebM loaded (13.64 seconds), both text tracks loaded (5 caption cues and 3 chapter cues), and the recovery chapter button sought to the VTT cue time |
+
+The recorder writes `docs/media/accesshold-demo.webm` plus synchronized English captions and chapter tracks. The WebM is a silent, synthetic UI recording; its descriptive captions and transcript provide a text alternative for the visuals, and the player retains native controls. Temporary recording browser/FFmpeg tooling was kept outside the repository. Browser smoke checks are not a substitute for manual screen-reader, caption-quality, or user-participant validation.

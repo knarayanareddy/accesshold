@@ -75,13 +75,15 @@ button:disabled {
   transform: translateY(0);
 }
 .global-header {
-  height: 68px;
-  flex: 0 0 68px;
+  min-height: 68px;
+  height: auto;
+  flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding: 0 36px;
+  gap: 10px 20px;
+  padding: 9px 36px;
   border-bottom: 1px solid var(--line);
   background: var(--surface);
 }
@@ -186,6 +188,156 @@ button:disabled {
 .accessibility-button > span:first-child {
   font-weight: 800;
   letter-spacing: -0.08em;
+}
+.demo-mode-switch {
+  display: flex;
+  flex: 1 1 430px;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-2);
+}
+.demo-mode-button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.demo-mode-icon {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+.demo-mode-icon .icon {
+  width: 17px;
+  height: 17px;
+}
+.demo-mode-button[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+.demo-mode-divider {
+  color: var(--muted);
+  font-weight: 700;
+}
+.header-tools {
+  flex: 0 0 auto;
+}
+
+.video-walkthrough-wrapper {
+  display: flex;
+  flex: 1;
+  width: 100%;
+}
+.video-walkthrough-main {
+  flex: 1;
+  width: 100%;
+  padding: clamp(24px, 5vw, 64px) clamp(16px, 5vw, 48px);
+  background: var(--canvas);
+}
+.video-walkthrough-layout {
+  display: grid;
+  gap: 24px;
+  width: min(100%, 1040px);
+  margin: 0 auto;
+}
+.video-walkthrough-heading {
+  max-width: 760px;
+}
+.video-walkthrough-heading h1 {
+  margin: 8px 0;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.15;
+}
+.video-walkthrough-heading > p:last-child {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--muted);
+}
+.video-walkthrough-card {
+  display: grid;
+  gap: 22px;
+  padding: clamp(14px, 2.5vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgb(20 43 58 / 8%);
+}
+.video-player-shell {
+  overflow: hidden;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #000;
+}
+.walkthrough-video {
+  display: block;
+  width: 100%;
+  max-height: min(70vh, 720px);
+  background: #000;
+  object-fit: contain;
+}
+.walkthrough-chapters h2 {
+  margin: 0 0 10px;
+  font-size: 18px;
+}
+.walkthrough-chapters ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.walkthrough-chapter-button {
+  min-height: 44px;
+  padding: 9px 13px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+.walkthrough-chapter-button[aria-current="true"] {
+  border-color: var(--primary);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+.walkthrough-transcript {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.walkthrough-transcript summary {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+}
+.walkthrough-transcript ol {
+  display: grid;
+  gap: 12px;
+  max-width: 78ch;
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+.walkthrough-fixture-note {
+  max-width: 80ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .workspace {
@@ -2063,7 +2215,22 @@ code,
     gap: 10px;
   }
   .brand-lockup {
+    order: 1;
     gap: 9px;
+  }
+  .header-tools {
+    order: 2;
+  }
+  .demo-mode-switch {
+    order: 3;
+    flex: 1 0 100%;
+    justify-content: stretch;
+    width: 100%;
+  }
+  .demo-mode-button {
+    flex: 1 1 0;
+    padding: 7px 5px;
+    font-size: 11px;
   }
   .brand-mark {
     width: 31px;
@@ -2400,6 +2567,11 @@ code,
   border-color: #ffffff !important;
   box-shadow: none !important;
   text-shadow: none !important;
+}
+:root[data-contrast="high"] .demo-mode-button[aria-pressed="true"],
+:root[data-contrast="high"] .walkthrough-chapter-button[aria-current="true"] {
+  outline: 2px solid #ffff00 !important;
+  outline-offset: 2px;
 }
 :root[data-contrast="high"] button:focus-visible,
 :root[data-contrast="high"] a:focus-visible,
